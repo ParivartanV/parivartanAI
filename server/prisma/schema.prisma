@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Set to "postgresql" for production server
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  googleId           String    @unique
+  passwordHash       String?   // Hashed password for email/password authentication
+  twoFactorPin       String?   // 2FA Security Master PIN (e.g. 312866)
+  twoFactorEnabled   Boolean   @default(false)
+  name               String?
+  avatarUrl          String?
+  role               String    @default("user") // "user" | "admin"
+  company            String?   // Optional client company / organization
+  subscriptionPlan   String    @default("free") // "free" | "pro" | "enterprise"
+  subscriptionStatus String    @default("active") // "active" | "trial" | "past_due" | "cancelled"
+  lastActiveAt       DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  folders      Folder[]
+  snippets     Snippet[]
+  aiPrompts    AiPrompt[]
+  aiVariables  AiVariable[]
+  aiPersonas   AiPersona[]
+  settings     UserSetting?
+  credentials  ClientCredential[]
+  payments     Payment[]
+  activityLogs ActivityLog[]
+
+  @@index([email])
+  @@index([googleId])
+  @@index([role])
+}
+
+model Folder {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientFolderId String    // Extension folder ID e.g. "folder_support"
+  name           String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  snippets       Snippet[]
+
+  @@unique([userId, clientFolderId])
+  @@index([userId])
+}
+
+model Snippet {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId        String?
+  folder          Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  clientSnippetId String   // Extension snippet ID e.g. "snip_ack"
+  title           String
+  shortcut        String
+  content         String
+  tags            String   @default("[]") // JSON stringified array for cross-DB compatibility
+  usageCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, clientSnippetId])
+  @@index([userId, shortcut])
+}
+
+model AiPrompt {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientPromptId String   // Extension prompt ID
+  title          String
+  category       String   @default("general")
+  template       String
+  description    String?
+  shortcut       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, clientPromptId])
+  @@index([userId])
+}
+
+model AiVariable {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key          String   // e.g. "Engineer_Name"
+  name         String
+  defaultValue String?
+  description  String?
+  isSystem     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId])
+}
+
+model AiPersona {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientPersonaId String
+  name            String
+  role            String?
+  icon            String?  @default("🎭")
+  systemPrompt    String
+  isCustom        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, clientPersonaId])
+  @@index([userId])
+}
+
+model UserSetting {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme         String   @default("day")
+  defaultAuthor String   @default("Support Engineer")
+  fontScale     Float    @default(1.0)
+  autoSync      Boolean  @default(true)
+  lastSyncAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ClientCredential {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceName  String   // e.g. "openai_api_key", "custom_webhook"
+  encryptedVal String   // AES-256-GCM encrypted
+  iv           String   // Initialization vector
+  tag          String   // Auth tag
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, serviceName])
+  @@index([userId])
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float    // Payment amount (e.g. 29.00)
+  currency      String   @default("USD")
+  status        String   // "completed" | "pending" | "failed" | "refunded"
+  planName      String   // "Pro Monthly" | "Enterprise Annual" | "Pay As You Go"
+  transactionId String   @unique // Transaction hash, gateway ref, or invoice ID
+  paymentMethod String   @default("credit_card") // "stripe" | "paypal" | "credit_card" | "wire"
+  invoiceUrl    String?
+  paidAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([transactionId])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // e.g. "AUTH_LOGIN", "SNIPPET_SYNC_PUSH", "AI_EXECUTE", "PAYMENT_RECORDED"
+  category  String   @default("system") // "auth" | "sync" | "ai" | "billing" | "system"
+  ipAddress String?
+  userAgent String?
+  details   String?  // JSON stringified metadata
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([category])
+  @@index([createdAt])
+}
+
