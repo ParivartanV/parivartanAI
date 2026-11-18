@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "x-frame-options", "operation": "remove" },
+        { "header": "content-security-policy", "operation": "remove" },
+        { "header": "frame-options", "operation": "remove" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*",
+      "requestDomains": [
+        "chatgpt.com",
+        "openai.com",
+        "auth.openai.com",
+        "auth0.openai.com",
+        "claude.ai",
+        "gemini.google.com",
+        "google.com",
+        "accounts.google.com"
+      ],
+      "resourceTypes": ["sub_frame"]
+    }
+  }
+]

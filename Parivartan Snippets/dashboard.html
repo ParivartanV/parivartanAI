@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parivartan Snippet - Dashboard</title>
+  <link rel="icon" type="image/png" href="icons/icon48.png">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="content_style.css">
+</head>
+<body class="theme-day">
+
+  <!-- DASHBOARD AUTH GATE OVERLAY (Displayed when client is NOT logged in) -->
+  <div id="dashboardAuthGateOverlay" style="position: fixed; inset: 0; z-index: 999999; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; max-width: 480px; width: 100%; padding: 32px 28px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); text-align: center;">
+      <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(6, 182, 212, 0.12); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0 0 8px 0;">Client Sign-In Required</h2>
+      <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 20px 0;">
+        Access to Parivartan Snippets & AI Tools is restricted. Please authenticate with your Google account or client credentials to unlock the dashboard.
+      </p>
+
+      <!-- Google Login Button -->
+      <button type="button" id="btnGateGoogleLogin" style="width: 100%; box-sizing: border-box; background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; padding: 10px 16px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.88rem; cursor: pointer; margin-bottom: 12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Sign in with Google Account</span>
+      </button>
+
+      <!-- Quick Preset: Master Admin -->
+      <button type="button" id="btnGatePresetMaster" style="width: 100%; box-sizing: border-box; background: rgba(234, 179, 8, 0.12); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.35); border-radius: 8px; font-weight: 600; padding: 8px 14px; font-size: 0.8rem; cursor: pointer; margin-bottom: 16px;">
+        👑 Master Admin (parivartanvishalsingh@gmail.com)
+      </button>
+
+      <!-- Form for Email, Password & 2FA PIN -->
+      <form id="formGateLogin" style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 4px;">Email Address</label>
+          <input type="email" id="inputGateEmail" placeholder="parivartanvishalsingh@gmail.com" value="parivartanvishalsingh@gmail.com" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-hover); color: var(--text-main); outline: none;">
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <div style="flex: 1.2;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 4px;">Password</label>
+            <input type="password" id="inputGatePassword" placeholder="kmbl1110" value="kmbl1110" required style="width: 100%; box-sizing: border-box; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-hover); color: var(--text-main); outline: none;">
+          </div>
+          <div style="flex: 0.9;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 4px;">2FA Master PIN</label>
+            <input type="text" id="inputGatePin" placeholder="312866" value="312866" maxlength="6" style="width: 100%; box-sizing: border-box; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-hover); color: var(--text-main); outline: none;">
+          </div>
+        </div>
+        <button type="submit" id="btnGateSubmitLogin" class="btn btn-primary" style="margin-top: 6px; padding: 10px; font-size: 0.88rem; font-weight: 600; width: 100%; justify-content: center;">
+          ⚡ Sign In & Unlock Workspace
+        </button>
+        <div id="gateAuthError" style="display: none; color: #ef4444; font-size: 0.78rem; text-align: center; margin-top: 4px;"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Top App Header -->
+  <header class="top-header">
+    <div class="brand-wrapper">
+      <img src="icons/logo.svg" alt="Parivartan Logo" class="brand-icon">
+      <span class="brand-title">Parivartan Snippet</span>
+      <div class="auto-save-pill" id="autoSaveIndicator">✓ Auto-saved</div>
+    </div>
+
+    <!-- View Switcher: Snippets vs AI Prompts & Lab -->
+    <nav class="header-nav-switcher">
+      <button class="nav-view-btn active" id="btnViewSnippets" type="button" title="Manage your reusable support snippets & templates">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span>Snippets</span>
+        <span class="nav-count-badge" id="snippetCountBadge">0</span>
+      </button>
+
+      <button class="nav-view-btn" id="btnViewAiPrompts" type="button" title="Custom AI Prompt Management & Execution Lab">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+          <path d="M4 11a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8z"></path>
+          <circle cx="9" cy="15" r="1"></circle>
+          <circle cx="15" cy="15" r="1"></circle>
+        </svg>
+        <span>AI Prompts & Lab</span>
+        <span class="nav-count-badge ai" id="promptCountBadge">4</span>
+      </button>
+    </nav>
+
+    <div class="header-actions">
+      <!-- Quick Font Scaling (A- / A+) -->
+      <div style="display: inline-flex; align-items: center; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; margin-right: 2px;">
+        <button class="btn-icon-nav" id="btnDashFontDec" title="Decrease Text Size (A-)" style="border: none; border-radius: 0; width: 28px; height: 32px; font-weight: 700; font-size: 0.72rem; color: var(--text-muted); padding: 0; cursor: pointer;">A-</button>
+        <button class="btn-icon-nav" id="btnDashFontInc" title="Increase Text Size (A+)" style="border: none; border-radius: 0; width: 28px; height: 32px; font-weight: 700; font-size: 0.85rem; color: var(--text-muted); padding: 0; border-left: 1px solid var(--border-color); cursor: pointer;">A+</button>
+      </div>
+
+      <!-- Quick Theme Toggle (Light / Dark) -->
+      <button class="btn-icon-nav" id="btnQuickThemeToggle" title="Toggle Light / Dark Mode">
+        <span id="themeToggleIcon" style="display: inline-flex; align-items: center; justify-content: center; line-height: 1;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </span>
+      </button>
+
+      <!-- Cloud Sync & Account Button -->
+      <button class="btn-icon-nav" id="btnOpenCloudSync" title="Cloud Database & Google Account Sync">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+        </svg>
+      </button>
+
+      <!-- Import / Export Button -->
+      <button class="btn-icon-nav" id="btnOpenBackup" title="Import & Export (JSON)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+
+      <!-- Settings Button -->
+      <button class="btn-icon-nav" id="btnOpenSettings" title="Settings (Day/Night Mode, Templates)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+
+      <!-- New Snippet Button (Snippets view) -->
+      <button class="btn-new-snippet" id="btnNewSnippet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New Snippet
+      </button>
+
+      <!-- New Prompt Button (AI Prompts view) -->
+      <button class="btn-new-snippet btn-new-prompt" id="btnNewPrompt" style="display: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New AI Prompt
+      </button>
+    </div>
+  </header>
+
+  <!-- 3-Column Snippets Workspace -->
+  <div class="workspace-container" id="workspaceSnippets">
+
+    <!-- Column 1: Left Folders & Snippets Tree -->
+    <aside class="left-sidebar" id="leftSidebar">
+      <div class="sidebar-search-row">
+        <div class="sidebar-search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="treeSearchInput" placeholder="Search snippets...">
+        </div>
+        <button class="btn-add-folder" id="btnAddFolder" title="Add New Main Folder">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            <line x1="12" y1="11" x2="12" y2="17"></line>
+            <line x1="9" y1="14" x2="15" y2="14"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tree of folders & snippets -->
+      <div class="tree-scroll-pane" id="folderTreePane">
+        <!-- Rendered via JS -->
+      </div>
+    </aside>
+
+    <!-- Sidebar Drag Resizer Handle -->
+    <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize sidebar (Double click to reset)"></div>
+
+    <!-- Column 2: Center Editor Area -->
+    <main class="center-editor-area">
+
+      <!-- Unsaved Changes Alert Bar (Hidden by default, displayed only when there are unsaved edits) -->
+      <div class="unsaved-banner" id="unsavedBanner" style="display: none;">
+        <span>⚠️ You have unsaved changes in this snippet template.</span>
+        <div class="unsaved-actions">
+          <button class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.78rem;" id="btnDiscardBanner">Discard</button>
+          <button class="btn btn-primary" style="padding: 3px 12px; font-size: 0.78rem;" id="btnSaveBanner">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- Top Meta Inputs Row (Matches Screenshot with Folder Selector & Delete) -->
+      <div class="editor-top-meta-row">
+        
+        <!-- Box 1: Label (describes the snippet) -->
+        <div class="meta-input-box label-box">
+          <span class="meta-box-tagline">Label (describes the snippet)</span>
+          <div class="meta-box-inner">
+            <svg class="meta-box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+            <input type="text" id="snippetLabelInput" placeholder="Snippet name...">
+          </div>
+        </div>
+
+        <!-- Box 2: Shortcut (typed to insert) -->
+        <div class="meta-input-box shortcut-box">
+          <div style="flex: 1;">
+            <span class="meta-box-tagline">Shortcut (typed to insert)</span>
+            <div class="meta-box-inner">
+              <svg class="meta-box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <line x1="6" y1="8" x2="6" y2="8"></line>
+                <line x1="10" y1="8" x2="10" y2="8"></line>
+                <line x1="14" y1="8" x2="14" y2="8"></line>
+                <line x1="18" y1="8" x2="18" y2="8"></line>
+                <line x1="6" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="18" y2="12"></line>
+                <line x1="7" y1="16" x2="17" y2="16"></line>
+              </svg>
+              <input type="text" id="snippetShortcutInput" placeholder="/shortcut" spellcheck="false">
+            </div>
+          </div>
+          <button class="btn-try-out" id="btnTryItOut" title="Test typing this shortcut">Try it out</button>
+        </div>
+
+        <!-- Box 3: Folder Selector with Move, Rename & Delete buttons -->
+        <div class="meta-input-box folder-selector-box" style="min-width: 185px; max-width: 250px;">
+          <span class="meta-box-tagline">Folder (Switch / Move)</span>
+          <div class="meta-box-inner" style="gap: 4px;">
+            <select id="snippetFolderSelect" class="folder-select-dropdown" title="Select or move to folder">
+              <!-- Injected by JS -->
+            </select>
+            <button class="folder-header-btn" id="btnMoveSnippetHeader" title="Move this snippet to another folder...">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"></polyline>
+                <path d="M3 5h18"></path>
+                <polyline points="7 23 3 19 7 15"></polyline>
+                <path d="M21 19H3"></path>
+              </svg>
+            </button>
+            <button class="folder-header-btn" id="btnRenameFolderHeader" title="Rename this folder">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+            <button class="folder-header-btn" id="btnDeleteFolderHeader" title="Delete this folder">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Save Snippet Button (Highlights only when content is not saved) -->
+        <button class="btn btn-save-snippet" id="btnSaveCurrentSnippet" title="All changes saved to library">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Saved</span>
+        </button>
+
+        <!-- Delete Snippet Button -->
+        <button class="btn btn-danger-outline" id="btnDeleteCurrentSnippet" title="Delete this snippet" style="padding: 7px 10px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; border: 1px solid #fecaca; color: #ef4444; border-radius: 6px; background: transparent; cursor: pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Delete
+        </button>
+
+        <!-- Edit / Preview Segmented Toggle -->
+        <div class="segmented-mode-toggle">
+          <button class="segmented-toggle-btn active" id="btnModeEdit">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            Edit
+          </button>
+          <button class="segmented-toggle-btn" id="btnModePreview">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Preview
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Rich Toolbar (Screenshot) -->
+      <div class="rich-toolbar" id="richToolbar">
+        <button class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button class="toolbar-btn" data-command="strikeThrough" title="Strikethrough"><s>S</s></button>
+        <div class="toolbar-divider"></div>
+        <button class="toolbar-btn" id="btnToolLink" title="Insert Link">🔗</button>
+        <button class="toolbar-btn" data-command="insertHorizontalRule" title="Divider">—</button>
+        <div class="toolbar-divider"></div>
+        <button class="toolbar-btn" id="btnSnippetUndo" title="Undo (Ctrl+Z)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+        <button class="toolbar-btn" id="btnSnippetRedo" title="Redo (Ctrl+Y)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
+          </svg>
+        </button>
+        <div class="toolbar-divider"></div>
+        <select class="toolbar-select" id="toolFontFamily" title="Font Family">
+          <option value="Default">Default</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Courier New, monospace">Monospace</option>
+          <option value="Georgia, serif">Georgia</option>
+        </select>
+        <select class="toolbar-select" id="toolFontSize" title="Font Size">
+          <option value="Normal">Normal</option>
+          <option value="Heading 1">Heading 1</option>
+          <option value="Heading 2">Heading 2</option>
+          <option value="Small">Small</option>
+        </select>
+        <div class="toolbar-divider"></div>
+        <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">• ≡</button>
+        <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">1. ≡</button>
+        <button class="toolbar-btn" data-command="subscript" title="Subscript">x₂</button>
+        <button class="toolbar-btn" data-command="superscript" title="Superscript">x²</button>
+        <button class="toolbar-btn" data-command="removeFormat" title="Clear Formatting">Tₓ</button>
+        <div class="toolbar-divider"></div>
+        <button class="toolbar-btn" id="btnToolEmoji" title="Insert Emoji">😊</button>
+        <button class="toolbar-btn" id="btnToolAI" title="AI Template Enhancement" style="width: auto; padding: 0 6px; font-size: 0.78rem;">✨ AI Write</button>
+      </div>
+
+      <!-- Snippet Dynamic Variables Insertion Bar -->
+      <div class="snippet-var-bar" id="snippetVarBar">
+        <div class="snippet-var-bar-header">
+          <div class="snippet-var-bar-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Dynamic Variables:</span>
+          </div>
+
+          <div class="snippet-var-bar-actions">
+            <!-- Dropdown Variable Selector -->
+            <div class="snippet-var-dropdown-wrap">
+              <select id="snippetVarSelectDropdown" class="snippet-var-select" title="Select variable to insert into snippet">
+                <optgroup label="🌐 Webpage / Ticket">
+                  <option value="Ticket_ID">{Ticket_ID} — Support Ticket #</option>
+                  <option value="Customer_Message">{Customer_Message} — Customer Inquiry</option>
+                  <option value="Page_context">{Page_context} — Webpage Context</option>
+                </optgroup>
+                <optgroup label="✨ AI Formulated">
+                  <option value="Resolution_Steps">{Resolution_Steps} — Technical Steps</option>
+                </optgroup>
+                <optgroup label="⚙️ Custom Variables" id="snippetCustomVarsOptgroup">
+                  <!-- Injected dynamically -->
+                </optgroup>
+                <optgroup label="📅 Date & Time">
+                  <option value="date">{date} — Today's Date</option>
+                  <option value="time">{time} — Current Time</option>
+                  <option value="datetime">{datetime} — Date & Time</option>
+                </optgroup>
+                <optgroup label="🎯 Cursor Placement">
+                  <option value="cursor">{cursor} — Cursor Position</option>
+                </optgroup>
+              </select>
+              <button type="button" class="btn-var-insert-action" id="btnInsertSnippetVar" title="Insert selected variable into snippet at cursor">
+                + Insert
+              </button>
+            </div>
+
+            <!-- Manage / Add Variable Button -->
+            <button type="button" class="btn-manage-vars" id="btnAddSnippetVarChip" title="Define or manage custom variables">
+              + Custom Variable
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Variable Chips Row -->
+        <div class="snippet-var-chips-row" id="snippetVarChipsRow">
+          <!-- Populated dynamically via JS: system chips + custom chips -->
+        </div>
+      </div>
+
+      <!-- Main Document Canvas -->
+      <div class="editor-canvas-container">
+        <!-- Live Editable Canvas -->
+        <div class="editor-document-surface" id="documentSurface" contenteditable="true" placeholder="Start typing your snippet template here..."></div>
+        
+        <!-- Live Rendered Preview (when Preview mode is clicked) -->
+        <div class="preview-document-surface" id="previewSurface"></div>
+      </div>
+
+      <!-- Detected Variables in Snippet Template -->
+      <div class="snippet-detected-box" id="snippetDetectedBox">
+        <div class="snippet-detected-header">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span class="detected-title">Variables Detected in Template:</span>
+          </div>
+          <span class="snippet-char-count" id="snippetCharCount">0 characters &bull; 0 words</span>
+        </div>
+        <div id="snippetDetectedBadges" class="detected-badges-wrap">
+          <span class="detected-none">No variables detected yet. Click any variable above to insert!</span>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Right Panel Drag Resizer Handle for Snippets -->
+    <div class="sidebar-resizer right-panel-resizer" id="snippetRightResizer" title="Drag to resize right panel"></div>
+
+    <!-- Column 3: Snippet Right Side Panel (Variables Hub & Live Test Lab) -->
+    <aside class="right-panel snippet-runner-panel" id="snippetRunnerPanel" style="width: 420px; min-width: 280px; max-width: 850px;">
+      
+      <!-- Runner Header -->
+      <div class="runner-header">
+        <div class="runner-header-title">
+          <span class="runner-icon">⚡</span>
+          <div>
+            <h3>Variables & Snippet Lab</h3>
+            <p>Manage variables, live preview & test</p>
+          </div>
+        </div>
+        <div class="runner-header-controls" style="display: flex; align-items: center; gap: 8px;">
+          <div class="runner-provider-pill" id="snippetRunnerShortcutPill" title="Current Shortcut">
+            <span class="status-dot online"></span>
+            <span id="snippetRunnerShortcutText">/shortcut</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="runner-body">
+
+        <!-- 1. Dynamic Variables Hub Card -->
+        <div class="runner-card" id="snippetRightVariablesCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">⚡</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">Dynamic Variables</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="runner-action-btn" id="btnSnippetLoadSampleTicket" title="Load sample Psychz support ticket values">📄 Sample</button>
+              <button type="button" class="runner-action-btn" id="btnSnippetClearVars" title="Clear all variable values">Clear</button>
+            </div>
+          </div>
+
+          <!-- Variable Selector & Management Bar (Dropdown Selector & Direct Actions) -->
+          <div class="runner-var-selector-wrap" style="margin-top:10px; background:var(--bg-hover); padding:8px 10px; border-radius:6px; border:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+              <label for="snippetRightVarDropdown" style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Variable Selector</label>
+              <span id="snippetRightVarSourceBadge" style="font-size:0.67rem; padding:1px 6px; border-radius:4px; background:rgba(37,99,235,0.12); color:var(--accent); font-weight:600;">🌐 Webpage</span>
+            </div>
+
+            <div style="display:flex; gap:6px; align-items:center;">
+              <select id="snippetRightVarDropdown" class="runner-persona-select" style="flex:1; padding:5px 8px; font-size:0.8rem; border-radius:5px; border:1px solid var(--border-color); background:var(--bg-surface); color:var(--text-main);">
+                <optgroup label="🌐 Webpage Fetched">
+                  <option value="Ticket_ID" selected>{Ticket_ID} — Support Ticket #</option>
+                  <option value="Customer_Message">{Customer_Message} — Customer Message</option>
+                  <option value="Page_context">{Page_context} — Webpage Context</option>
+                </optgroup>
+                <optgroup label="✨ AI Generated">
+                  <option value="Resolution_Steps">{Resolution_Steps} — Resolution Steps</option>
+                </optgroup>
+                <optgroup label="⚙️ Custom Variables" id="snippetRightCustomVarsOptgroup">
+                  <!-- Populated dynamically -->
+                </optgroup>
+                <optgroup label="📅 Date & Time">
+                  <option value="date">{date} — Today's Date</option>
+                  <option value="time">{time} — Current Time</option>
+                  <option value="datetime">{datetime} — Date & Time</option>
+                </optgroup>
+                <optgroup label="🎯 Cursor Placement">
+                  <option value="cursor">{cursor} — Cursor Position</option>
+                </optgroup>
+              </select>
+              <button type="button" class="runner-action-btn" id="btnSnippetRightInsertVar" title="Insert selected variable into snippet editor" style="background:var(--accent); color:#fff; border-color:var(--accent); flex-shrink:0;">
+                + Insert
+              </button>
+            </div>
+
+            <!-- Management Action Row: Add / Edit / Remove directly from Snippet Right Panel -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-color);">
+              <span style="font-size:0.69rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;" id="snippetRightVarInfoText">🌐 Auto-extracted from webpage</span>
+              <div style="display:flex; gap:5px; align-items:center; flex-shrink:0;">
+                <button type="button" class="runner-action-btn" id="btnSnippetRightNewVar" title="Add new custom variable">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>Add</span>
+                </button>
+                <button type="button" class="runner-action-btn" id="btnSnippetRightEditCustomVar" title="Edit selected custom variable" style="display:none;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  <span>Edit</span>
+                </button>
+                <button type="button" class="runner-action-btn btn-danger-action" id="btnSnippetRightDeleteCustomVar" title="Delete selected custom variable" style="display:none;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inline Custom Variable Form for Snippet Panel (Add & Edit) -->
+          <div id="snippetRightVarEditorForm" style="display:none; margin-top:8px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:6px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong id="snippetRightVarFormTitle" style="font-size:0.78rem; color:var(--text-main);">Add Custom Variable</strong>
+              <button type="button" class="btn-text-action" id="btnSnippetRightCancelVar">✕</button>
+            </div>
+            <input type="hidden" id="snippetRightEditingVarId" value="">
+            <div style="margin-bottom:6px;">
+              <input type="text" id="snippetRightVarNameInput" placeholder="Name (e.g. Server IP)" style="width:100%; font-size:0.78rem; padding:5px 7px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-hover); color:var(--text-main);">
+            </div>
+            <div style="margin-bottom:6px;">
+              <input type="text" id="snippetRightVarKeyInput" placeholder="Tag Name (e.g. Server_IP)" style="width:100%; font-size:0.78rem; padding:5px 7px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-hover); color:var(--text-main);">
+            </div>
+            <div style="margin-bottom:6px;">
+              <input type="text" id="snippetRightVarDefaultInput" placeholder="Default / Sample Value" style="width:100%; font-size:0.78rem; padding:5px 7px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-hover); color:var(--text-main);">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:6px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnSnippetRightCancelVarBtn">Cancel</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnSnippetRightSaveVarBtn">Save Variable</button>
+            </div>
+          </div>
+
+          <!-- Clean Variable Groups (NO bulky open inputs by default) -->
+          <div class="runner-var-groups" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+
+            <!-- Group A: Fetched from Webpage -->
+            <div class="runner-vargroup-box">
+              <div class="runner-vargroup-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.72rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">🌐 Webpage Extracted</span>
+                <span style="font-size:0.67rem; color:var(--text-muted);">Auto-filled</span>
+              </div>
+
+              <!-- Ticket_ID -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Ticket_ID}" title="Click to insert {Ticket_ID} into snippet editor">
+                    + {Ticket_ID}
+                  </button>
+                  <span class="var-clean-status" id="snippetTicketIdStatusBadge">🌐 Ticket: Auto</span>
+                  <button type="button" class="btn-var-toggle" data-drawer="snippetDrawer_Ticket_ID" data-action-label="Override" title="Toggle manual input/override for {Ticket_ID}">
+                    <span>▼ Override</span>
+                  </button>
+                </div>
+                <div class="runner-var-drawer" id="snippetDrawer_Ticket_ID" style="display:none; margin-top:6px;">
+                  <input type="text" id="snippetVar_Ticket_ID" class="runner-var-input" placeholder="e.g. #4970144">
+                </div>
+              </div>
+
+              <!-- Customer_Message -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Customer_Message}" title="Click to insert {Customer_Message} into snippet editor">
+                    + {Customer_Message}
+                  </button>
+                  <span class="var-clean-status" id="snippetCustomerMsgStatusBadge">🌐 Message: Auto</span>
+                  <button type="button" class="btn-var-toggle" data-drawer="snippetDrawer_Customer_Message" data-action-label="Override" title="Toggle manual input/override for {Customer_Message}">
+                    <span>▼ Override</span>
+                  </button>
+                </div>
+                <div class="runner-var-drawer" id="snippetDrawer_Customer_Message" style="display:none; margin-top:6px;">
+                  <textarea id="snippetVar_Customer_Message" class="runner-var-textarea" rows="2" placeholder="Customer inquiry or message..."></textarea>
+                </div>
+              </div>
+
+              <!-- Page_context -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Page_context}" title="Click to insert {Page_context} into snippet editor">
+                    + {Page_context}
+                  </button>
+                  <span class="var-clean-status" id="snippetPageContextLengthBadge">🌐 Webpage (0 chars)</span>
+                  <button type="button" class="btn-var-toggle" data-drawer="snippetDrawer_Page_context" data-action-label="Override" title="Toggle manual input/override for {Page_context}">
+                    <span>▼ Override</span>
+                  </button>
+                </div>
+                <div class="runner-var-drawer" id="snippetDrawer_Page_context" style="display:none; margin-top:6px;">
+                  <textarea id="snippetVar_Page_context" class="runner-var-textarea" rows="3" placeholder="Page text / ticket content..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Group B: AI Generated Variables -->
+            <div class="runner-vargroup-box">
+              <div class="runner-vargroup-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.72rem; font-weight:700; color:#8b5cf6; text-transform:uppercase; letter-spacing:0.5px;">✨ AI Generated</span>
+                <span id="snippetResolutionStepsStatus" style="font-size:0.67rem; color:var(--text-muted);">Ready</span>
+              </div>
+
+              <!-- Resolution_Steps -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Resolution_Steps}" title="Click to insert {Resolution_Steps} into snippet editor">
+                    + {Resolution_Steps}
+                  </button>
+                  <div style="display:flex; align-items:center; gap:5px;">
+                    <button type="button" class="runner-action-btn" id="btnSnippetRightGenSteps" title="Generate resolution steps using AI based on context" style="color:#8b5cf6; border-color:rgba(139,92,246,0.3);">
+                      ✨ Steps
+                    </button>
+                    <button type="button" class="btn-var-toggle" data-drawer="snippetDrawer_Resolution_Steps" data-action-label="View/Edit" title="Toggle view/edit for {Resolution_Steps}">
+                      <span>▼ View/Edit</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="runner-var-drawer" id="snippetDrawer_Resolution_Steps" style="display:none; margin-top:6px;">
+                  <textarea id="snippetVar_Resolution_Steps" class="runner-var-textarea" rows="3" placeholder="AI generated steps or type your own..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Group D: Custom Variables -->
+            <div class="runner-vargroup-box">
+              <div class="runner-vargroup-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.72rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.5px;">⚙️ Custom Variables</span>
+                <span style="font-size:0.67rem; color:var(--text-muted);" id="snippetRightCustomVarsCountBadge">0 custom</span>
+              </div>
+
+              <!-- Custom Variables List Container -->
+              <div id="snippetRightCustomVarsList" style="display:flex; flex-direction:column; gap:6px;">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2. Resolved Snippet Output Card -->
+        <div class="runner-card" id="snippetRightPreviewCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">🚀</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">Resolved Snippet Preview</strong>
+            </div>
+            <button type="button" class="runner-action-btn" id="btnCopyResolvedSnippet" title="Copy resolved snippet to clipboard">
+              📋 Copy
+            </button>
+          </div>
+
+          <div class="runner-prompt-box" style="margin-top:8px;">
+            <textarea id="snippetResolvedOutput" class="runner-resolved-textarea" readonly rows="6" placeholder="Resolved snippet with replaced variables will appear here..."></textarea>
+          </div>
+        </div>
+
+        <!-- 3. Try Shortcut Expansion Lab Card -->
+        <div class="runner-card" id="snippetRightTestCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">🧪</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">Test Shortcut Expansion</strong>
+            </div>
+            <button type="button" class="btn-text-action" id="btnClearSnippetTestInput">Clear</button>
+          </div>
+          <div style="margin-top:8px;">
+            <p style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px;">
+              Type shortcut (e.g. <code id="snippetTestExpectedShortcut" style="color:var(--accent);">/snip</code>) + Space or Tab to test in-memory expansion:
+            </p>
+            <textarea id="snippetTestInput" class="runner-var-textarea" rows="3" placeholder="Click here and type your shortcut to test live expansion..."></textarea>
+            <div id="snippetTestStatus" style="margin-top:4px; font-size:0.7rem; color:var(--text-muted);"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- 3-Column AI Prompts & Lab Workspace -->
+  <div class="workspace-container ai-prompts-workspace" id="workspaceAiPrompts" style="display: none;">
+
+    <!-- Column 1: Left Saved Prompts Sidebar -->
+    <aside class="left-sidebar ai-prompts-sidebar" id="aiPromptsSidebar">
+      <div class="sidebar-search-row">
+        <div class="sidebar-search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="promptSearchInput" placeholder="Search prompts & instructions...">
+        </div>
+        <button class="btn-add-folder" id="btnSidebarNewPrompt" title="Create New AI Prompt" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="ai-category-chips" id="promptCategoryChips">
+        <button class="ai-cat-chip active" data-cat="all" type="button">All Prompts</button>
+        <button class="ai-cat-chip" data-cat="Support" type="button">Support</button>
+        <button class="ai-cat-chip" data-cat="Diagnostic" type="button">Diagnostic</button>
+        <button class="ai-cat-chip" data-cat="Technical" type="button">Technical</button>
+      </div>
+
+      <!-- Saved Prompts List -->
+      <div class="ai-prompt-list" id="aiPromptList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Variables Management Shortcut Footer -->
+      <div class="ai-variables-footer">
+        <div class="ai-var-summary">
+          <span class="ai-var-icon">⚡</span>
+          <div class="ai-var-text">
+            <strong>Dynamic Variables</strong>
+            <span id="aiVarCountSummary">3 System, 3 Custom</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnOpenVariablesModal" type="button" title="Manage custom dynamic variables">
+          Manage
+        </button>
+      </div>
+    </aside>
+
+    <!-- Sidebar Resizer -->
+    <div class="sidebar-resizer" id="aiSidebarResizer" title="Drag to resize sidebar"></div>
+
+    <!-- Column 2: Center Custom Prompt Editor -->
+    <main class="main-editor ai-prompt-editor-panel" id="aiPromptEditorPanel">
+      
+      <!-- Top Meta Bar: Name, Category, Default Button -->
+      <div class="ai-editor-header">
+        <div class="ai-editor-title-row">
+          <div class="ai-editor-name-wrap">
+            <span class="ai-prompt-symbol">🤖</span>
+            <input type="text" id="promptNameInput" placeholder="Prompt Name (e.g., Summarize Page)" class="prompt-title-input" autocomplete="off">
+          </div>
+
+          <div class="ai-editor-meta-actions">
+            <div class="ai-category-input-wrap">
+              <label for="promptCategoryInput" class="ai-mini-label">Category</label>
+              <input type="text" id="promptCategoryInput" placeholder="Support / Diagnostic" class="prompt-category-input" list="promptCategoryDatalist">
+              <datalist id="promptCategoryDatalist">
+                <option value="Support">
+                <option value="Diagnostic">
+                <option value="Technical">
+                <option value="General">
+              </datalist>
+            </div>
+
+            <button type="button" class="btn-prompt-default" id="btnToggleDefaultPrompt" title="Toggle as default prompt for quick access">
+              <span id="starDefaultIcon">⭐</span>
+              <span id="lblDefaultPrompt">Default</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Description Input -->
+        <div class="ai-editor-desc-row">
+          <input type="text" id="promptDescInput" placeholder="Short description or purpose (e.g. Highlight main topic, findings, and pending actions)" class="prompt-desc-input">
+        </div>
+      </div>
+
+      <!-- Dynamic Variable Inserter Toolbar -->
+      <div class="prompt-variable-toolbar">
+        <div class="prompt-var-heading">
+          <span class="prompt-var-label">⚡ Click to Insert Dynamic Variable:</span>
+          <span class="prompt-var-hint">(Automatically replaced at runtime with real ticket or page content)</span>
+        </div>
+        <div class="prompt-var-chips-container" id="promptVarChipsContainer">
+          <!-- Dynamic Chips injected here -->
+        </div>
+      </div>
+
+      <!-- Prompt Instructions / Template Textarea -->
+      <div class="prompt-editor-canvas-wrap">
+        <div class="prompt-editor-canvas-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>AI Instructions & Template Content</span>
+            <div style="display: inline-flex; align-items: center; gap: 2px; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 4px; padding: 1px 3px;">
+              <button type="button" class="btn-icon-subtle" id="btnPromptUndo" title="Undo (Ctrl+Z)" style="background:none; border:none; cursor:pointer; padding:2px 5px; font-size:0.75rem; color:var(--text-main); display:inline-flex; align-items:center;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span style="font-size: 0.7rem; margin-left: 2px;">Undo</span>
+              </button>
+              <button type="button" class="btn-icon-subtle" id="btnPromptRedo" title="Redo (Ctrl+Y)" style="background:none; border:none; cursor:pointer; padding:2px 5px; font-size:0.75rem; color:var(--text-main); display:inline-flex; align-items:center;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
+                </svg>
+                <span style="font-size: 0.7rem; margin-left: 2px;">Redo</span>
+              </button>
+            </div>
+          </div>
+          <span class="prompt-char-count" id="promptCharCount">0 characters</span>
+        </div>
+        <textarea id="promptTemplateInput" class="prompt-editor-textarea" placeholder="Write your AI instructions here. Example:
+
+Summarize the following page in simple, easy-to-understand language.
+
+Highlight:
+1. Main topic or issue.
+2. Important information and key findings.
+3. Current status or conclusion.
+4. Pending actions, if any.
+
+Keep the summary concise, structured, and easy to read.
+
+Page Content:
++++++++++++++++++++
+{Page_context}
++++++++++++++++++++"></textarea>
+      </div>
+
+      <!-- Detected Variables Badge Row -->
+      <div class="prompt-detected-row">
+        <span class="detected-label">Detected Variables in Template:</span>
+        <div id="promptDetectedBadges" class="detected-badges-wrap">
+          <span class="detected-none">No variables detected yet. Click any variable above to insert!</span>
+        </div>
+      </div>
+
+      <!-- Editor Bottom Actions -->
+      <div class="prompt-editor-footer">
+        <div class="prompt-footer-left">
+          <button type="button" class="btn btn-secondary" id="btnDeleteCurrentPrompt" title="Delete this prompt">
+            🗑️ Delete
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnDuplicateCurrentPrompt" title="Make a duplicate copy of this prompt">
+            📋 Duplicate
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnPreviewCurrentPrompt" title="Preview prompt with resolved variable values">
+            👁️ Preview
+          </button>
+        </div>
+
+        <div class="prompt-footer-right">
+          <button type="button" class="btn btn-secondary" id="btnSaveCurrentPrompt" title="All changes saved to library">
+            ✓ Saved
+          </button>
+          <button type="button" class="btn btn-primary btn-run-prompt" id="btnOpenInAiLab">
+            🚀 Test in Lab &rarr;
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Right Panel Drag Resizer Handle -->
+    <div class="sidebar-resizer right-panel-resizer" id="aiRightPanelResizer" title="Drag to resize right panel"></div>
+
+    <!-- Column 3: Right Side Panel (Variables Hub, Persona Manager & Execution Lab) -->
+    <aside class="right-panel ai-prompt-runner-panel" id="aiPromptRunnerPanel" style="width: 420px; min-width: 280px; max-width: 850px;">
+      
+      <!-- Runner Header -->
+      <div class="runner-header">
+        <div class="runner-header-title">
+          <span class="runner-icon">⚡</span>
+          <div>
+            <h3>Variables & AI Lab</h3>
+            <p>Manage variables, persona & live test</p>
+          </div>
+        </div>
+        <div class="runner-header-controls" style="display: flex; align-items: center; gap: 8px;">
+          <div class="runner-provider-pill" id="runnerProviderPill" title="Active AI Engine">
+            <span class="status-dot online"></span>
+            <span id="runnerProviderName">Gemini</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="runner-body">
+
+        <!-- 1. AI Persona Manager Card (Managed directly in Right Panel) -->
+        <div class="runner-card" id="rightPanelPersonaCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">🎭</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">AI Thinking Persona</strong>
+            </div>
+            <div class="runner-header-actions" style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="runner-action-btn" id="btnRightPanelNewPersona" title="Create a custom thinking persona (e.g. CEO)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>New</span>
+              </button>
+              <button type="button" class="runner-action-btn" id="btnRightPanelEditPersona" title="Edit selected persona prompt">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span>Edit</span>
+              </button>
+              <button type="button" class="runner-action-btn btn-danger-action" id="btnRightPanelDeletePersona" title="Delete custom persona" style="display:none;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;">
+            <select id="runnerPersonaSelect" class="runner-persona-select" style="width:100%; padding:6px 10px; font-size:0.82rem; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-surface); color:var(--text-main);">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <!-- Active Persona Trait Summary -->
+          <div id="rightPanelPersonaPreview" style="margin-top:8px; font-size:0.75rem; color:var(--text-muted); background:var(--bg-hover); padding:7px 10px; border-radius:6px; border:1px solid var(--border-color); line-height:1.4;">
+            <strong id="rightPanelPersonaName" style="color:var(--text-main);">Direct Analyst</strong>:
+            <span id="rightPanelPersonaDesc">Direct structured bullet pointers, concise technical summary, zero support boilerplate.</span>
+          </div>
+
+          <!-- Inline Persona Creation & Edit Form (Collapsible) -->
+          <div id="rightPanelPersonaEditorForm" style="display:none; margin-top:10px; background:var(--bg-hover); border:1px solid var(--border-color); border-radius:6px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong id="rightPanelPersonaFormTitle" style="font-size:0.8rem; color:var(--text-main);">New Custom Persona</strong>
+              <button type="button" class="btn-text-action" id="btnRightPanelCancelPersonaEdit">✕</button>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:6px;">
+              <input type="text" id="rightPanelPersonaIconInput" placeholder="Icon (e.g. 👔)" style="width:50px; font-size:0.8rem; padding:4px 6px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-surface); color:var(--text-main);">
+              <input type="text" id="rightPanelPersonaNameInput" placeholder="Persona Name (e.g. CEO)" style="flex:1; font-size:0.8rem; padding:4px 6px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-surface); color:var(--text-main);">
+            </div>
+            <div style="margin-bottom:6px;">
+              <input type="text" id="rightPanelPersonaRoleInput" placeholder="Role (e.g. Executive Decision Maker)" style="width:100%; font-size:0.8rem; padding:4px 6px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-surface); color:var(--text-main);">
+            </div>
+            <div style="margin-bottom:8px;">
+              <textarea id="rightPanelPersonaPromptInput" rows="3" placeholder="Define how this persona thinks and answers..." style="width:100%; font-size:0.78rem; padding:6px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-surface); color:var(--text-main); resize:vertical;"></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:6px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnRightPanelCancelPersona">Cancel</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnRightPanelSavePersona">Save Persona</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Dynamic Variables Hub Card -->
+        <div class="runner-card" id="rightPanelVariablesCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">⚡</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">Dynamic Variables</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="runner-action-btn" id="btnLoadSampleTicket" title="Load sample Psychz support ticket values">📄 Sample</button>
+              <button type="button" class="runner-action-btn" id="btnClearRunnerVars" title="Clear all variable values">Clear</button>
+            </div>
+          </div>
+
+          <!-- Variable Selector & Management Bar (Dropdown Selector & Direct Actions) -->
+          <div class="runner-var-selector-wrap" style="margin-top:10px; background:var(--bg-hover); padding:8px 10px; border-radius:6px; border:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+              <label for="runnerVarSelectDropdown" style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Variable Selector</label>
+              <span id="selectedVarSourceBadge" style="font-size:0.67rem; padding:1px 6px; border-radius:4px; background:rgba(37,99,235,0.12); color:var(--accent); font-weight:600;">🌐 Webpage</span>
+            </div>
+
+            <div style="display:flex; gap:6px; align-items:center;">
+              <select id="runnerVarSelectDropdown" class="runner-persona-select" style="flex:1; padding:5px 8px; font-size:0.8rem; border-radius:5px; border:1px solid var(--border-color); background:var(--bg-surface); color:var(--text-main);">
+                <optgroup label="🌐 Webpage Fetched">
+                  <option value="Page_context" selected>{Page_context} — Webpage Context</option>
+                  <option value="Ticket_ID">{Ticket_ID} — Support Ticket #</option>
+                  <option value="Customer_Message">{Customer_Message} — Customer Message</option>
+                </optgroup>
+                <optgroup label="✨ AI Generated">
+                  <option value="Resolution_Steps">{Resolution_Steps} — Resolution Steps</option>
+                </optgroup>
+                <optgroup label="⚙️ Custom Variables" id="rightPanelCustomVarsOptgroup">
+                  <!-- Populated dynamically -->
+                </optgroup>
+              </select>
+              <button type="button" class="runner-action-btn" id="btnInsertSelectedVar" title="Insert selected variable into prompt template" style="background:var(--accent); color:#fff; border-color:var(--accent); flex-shrink:0;">
+                + Insert
+              </button>
+            </div>
+
+            <!-- Management Action Row: Add / Edit / Remove directly from Right Panel -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-color);">
+              <span style="font-size:0.69rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;" id="selectedVarInfoText">🌐 Auto-extracted from webpage</span>
+              <div style="display:flex; gap:5px; align-items:center; flex-shrink:0;">
+                <button type="button" class="runner-action-btn" id="btnRightPanelNewVar" title="Add new custom variable">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>Add</span>
+                </button>
+                <button type="button" class="runner-action-btn" id="btnRightPanelEditCustomVar" title="Edit selected custom variable" style="display:none;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  <span>Edit</span>
+                </button>
+                <button type="button" class="runner-action-btn btn-danger-action" id="btnRightPanelDeleteCustomVar" title="Delete selected custom variable" style="display:none;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inline Custom Variable Form (Add & Edit) -->
+          <div id="rightPanelVarEditorForm" style="display:none; margin-top:8px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:6px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong id="rightPanelVarFormTitle" style="font-size:0.78rem; color:var(--text-main);">Add Custom Variable</strong>
+              <button type="button" class="btn-text-action" id="btnRightPanelCancelVar">✕</button>
+            </div>
+            <input type="hidden" id="rightPanelEditingVarId" value="">
+            <div style="margin-bottom:6px;">
+              <input type="text" id="rightPanelVarNameInput" placeholder="Name (e.g. Server IP)" style="width:100%; font-size:0.78rem; padding:5px 7px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-hover); color:var(--text-main);">
+            </div>
+            <div style="margin-bottom:6px;">
+              <input type="text" id="rightPanelVarKeyInput" placeholder="Tag Name (e.g. Server_IP)" style="width:100%; font-size:0.78rem; padding:5px 7px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-hover); color:var(--text-main);">
+            </div>
+            <div style="margin-bottom:6px;">
+              <input type="text" id="rightPanelVarDefaultInput" placeholder="Default / Sample Value" style="width:100%; font-size:0.78rem; padding:5px 7px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-hover); color:var(--text-main);">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:6px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnRightPanelCancelVarBtn">Cancel</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnRightPanelSaveVarBtn">Save Variable</button>
+            </div>
+          </div>
+
+          <!-- Clean Variable Groups (NO bulky open inputs by default) -->
+          <div class="runner-var-groups" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+
+            <!-- Group A: Fetched from Webpage -->
+            <div class="runner-vargroup-box">
+              <div class="runner-vargroup-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.72rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">🌐 Webpage Extracted</span>
+                <span style="font-size:0.67rem; color:var(--text-muted);">Auto-filled</span>
+              </div>
+
+              <!-- Page_context -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Page_context}" title="Click to insert {Page_context} into prompt editor">
+                    + {Page_context}
+                  </button>
+                  <span class="var-clean-status" id="pageContextLengthBadge">🌐 Webpage (0 chars)</span>
+                  <button type="button" class="btn-var-toggle" data-drawer="drawer_Page_context" data-action-label="Override" title="Toggle manual input/override for {Page_context}">
+                    <span>▼ Override</span>
+                  </button>
+                </div>
+                <div class="runner-var-drawer" id="drawer_Page_context" style="display:none; margin-top:6px;">
+                  <textarea id="runnerVar_Page_context" class="runner-var-textarea" rows="3" placeholder="Page text / ticket content (leave empty to use webpage context)..."></textarea>
+                </div>
+              </div>
+
+              <!-- Ticket_ID -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Ticket_ID}" title="Click to insert {Ticket_ID} into prompt editor">
+                    + {Ticket_ID}
+                  </button>
+                  <span class="var-clean-status" id="ticketIdStatusBadge">🌐 Ticket: Auto</span>
+                  <button type="button" class="btn-var-toggle" data-drawer="drawer_Ticket_ID" data-action-label="Override" title="Toggle manual input/override for {Ticket_ID}">
+                    <span>▼ Override</span>
+                  </button>
+                </div>
+                <div class="runner-var-drawer" id="drawer_Ticket_ID" style="display:none; margin-top:6px;">
+                  <input type="text" id="runnerVar_Ticket_ID" class="runner-var-input" placeholder="e.g. #4970144">
+                </div>
+              </div>
+
+              <!-- Customer_Message -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Customer_Message}" title="Click to insert {Customer_Message} into prompt editor">
+                    + {Customer_Message}
+                  </button>
+                  <span class="var-clean-status" id="customerMsgStatusBadge">🌐 Message: Auto</span>
+                  <button type="button" class="btn-var-toggle" data-drawer="drawer_Customer_Message" data-action-label="Override" title="Toggle manual input/override for {Customer_Message}">
+                    <span>▼ Override</span>
+                  </button>
+                </div>
+                <div class="runner-var-drawer" id="drawer_Customer_Message" style="display:none; margin-top:6px;">
+                  <textarea id="runnerVar_Customer_Message" class="runner-var-textarea" rows="2" placeholder="Customer inquiry or message..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Group B: AI Generated Variables -->
+            <div class="runner-vargroup-box">
+              <div class="runner-vargroup-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.72rem; font-weight:700; color:#8b5cf6; text-transform:uppercase; letter-spacing:0.5px;">✨ AI Generated</span>
+                <span id="resolutionStepsStatus" style="font-size:0.67rem; color:var(--text-muted);">Ready to generate</span>
+              </div>
+
+              <!-- Resolution_Steps -->
+              <div class="runner-var-clean-row">
+                <div class="runner-var-row-main">
+                  <button type="button" class="runner-chip-insert" data-tag="{Resolution_Steps}" title="Click to insert {Resolution_Steps} into prompt editor">
+                    + {Resolution_Steps}
+                  </button>
+                  <div style="display:flex; align-items:center; gap:5px;">
+                    <button type="button" class="runner-action-btn" id="btnGenerateResolutionSteps" title="Generate resolution steps using AI based on context" style="color:#8b5cf6; border-color:rgba(139,92,246,0.3);">
+                      ✨ Steps
+                    </button>
+                    <button type="button" class="btn-var-toggle" data-drawer="drawer_Resolution_Steps" data-action-label="View/Edit" title="Toggle view/edit for {Resolution_Steps}">
+                      <span>▼ View/Edit</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="runner-var-drawer" id="drawer_Resolution_Steps" style="display:none; margin-top:6px;">
+                  <textarea id="runnerVar_Resolution_Steps" class="runner-var-textarea" rows="3" placeholder="Click '✨ Steps' above or enter resolution steps..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Group D: Custom Variables (Managed in Right Panel) -->
+            <div class="runner-vargroup-box">
+              <div class="runner-vargroup-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.72rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.5px;">⚙️ Custom Variables</span>
+                <span style="font-size:0.67rem; color:var(--text-muted);" id="customVarsCountBadge">0 custom</span>
+              </div>
+
+              <!-- Custom Variables List Container -->
+              <div id="rightPanelCustomVarsList" style="display:flex; flex-direction:column; gap:6px;">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. Resolved Prompt Preview & Execution -->
+        <div class="runner-card" id="rightPanelExecutionCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">🚀</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">Resolved Prompt Preview</strong>
+            </div>
+            <label class="runner-temp-toggle" title="Allow one-off tweaks to the final prompt before sending without overwriting the template">
+              <input type="checkbox" id="chkAllowTemporaryEdits">
+              <span style="font-size:0.7rem;">Temporary edits</span>
+            </label>
+          </div>
+
+          <div class="runner-prompt-box" style="margin-top:8px;">
+            <textarea id="runnerResolvedPrompt" class="runner-resolved-textarea" readonly placeholder="Resolved prompt with replaced variables will appear here..."></textarea>
+          </div>
+
+          <!-- Execute Button -->
+          <div style="margin-top:10px;">
+            <button type="button" class="btn btn-primary btn-execute-ai" id="btnRunAiPrompt" style="width:100%; padding:9px 14px; font-weight:700; font-size:0.88rem;">
+              <span class="btn-run-icon">⚡</span>
+              <span id="btnRunAiPromptText">Run Prompt</span>
+            </button>
+            <div id="runnerExecutionStatus" class="runner-status" style="margin-top:6px;"></div>
+          </div>
+        </div>
+
+        <!-- 4. AI Response Display -->
+        <div class="runner-card response-section" id="rightPanelResponseCard">
+          <div class="runner-card-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem;">💡</span>
+              <strong style="font-size:0.84rem; color:var(--text-main);">AI Response</strong>
+            </div>
+            <div class="response-actions" id="responseActions" style="display: none; gap:4px;">
+              <button type="button" class="btn-text-action" id="btnCopyAiResponse">📋 Copy</button>
+              <button type="button" class="btn-text-action" id="btnSaveAiAsSnippet">📥 Save</button>
+              <button type="button" class="btn-text-action" id="btnRerunAiPrompt">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg> Re-run
+              </button>
+              <button type="button" class="btn-text-action" id="btnClearAiResponse">Clear</button>
+            </div>
+          </div>
+
+          <div class="runner-response-container" id="runnerResponseContainer" style="margin-top:8px;">
+            <div class="runner-response-empty" id="runnerResponseEmpty">
+              <span style="font-size: 1.5rem; opacity: 0.6;">🤖</span>
+              <p style="font-size:0.78rem;">Click <strong>Run Prompt</strong> above to generate response.</p>
+            </div>
+            <div class="runner-response-content" id="runnerResponseContent" style="display: none;"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- Modal: Settings (Day/Night Mode, Default Message Template) -->
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3>Settings</h3>
+        <button class="modal-close-btn" data-close="modalSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- 1. Theme Selection: Day, Night, System -->
+        <div class="form-group" style="margin-bottom: 22px;">
+          <label style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Appearance Theme</span>
+            <span style="font-size: 0.74rem; font-weight: normal; color: var(--text-muted);">Click to preview live</span>
+          </label>
+          
+          <div class="theme-picker-grid">
+            <!-- Day / Light Card -->
+            <div class="theme-card active" data-theme="day" id="themeCardDay">
+              <div class="theme-check-badge">✓</div>
+              <div class="theme-mockup-frame">
+                <div class="theme-mockup-topbar">
+                  <div class="theme-mockup-dot"></div>
+                  <div class="theme-mockup-dot"></div>
+                  <div class="theme-mockup-dot"></div>
+                </div>
+                <div class="theme-mockup-body">
+                  <div class="theme-mockup-sidebar">
+                    <div class="theme-mockup-item active"></div>
+                    <div class="theme-mockup-item"></div>
+                    <div class="theme-mockup-item"></div>
+                  </div>
+                  <div class="theme-mockup-content">
+                    <div class="theme-mockup-line title"></div>
+                    <div class="theme-mockup-line"></div>
+                    <div class="theme-mockup-line"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="theme-card-details">
+                <div class="theme-card-icon-pill">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                  </svg>
+                </div>
+                <div class="theme-card-text">
+                  <span class="theme-card-name">Light</span>
+                  <span class="theme-card-desc">Crisp daytime</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Night / Dark Card -->
+            <div class="theme-card" data-theme="night" id="themeCardNight">
+              <div class="theme-check-badge">✓</div>
+              <div class="theme-mockup-frame">
+                <div class="theme-mockup-topbar">
+                  <div class="theme-mockup-dot"></div>
+                  <div class="theme-mockup-dot"></div>
+                  <div class="theme-mockup-dot"></div>
+                </div>
+                <div class="theme-mockup-body">
+                  <div class="theme-mockup-sidebar">
+                    <div class="theme-mockup-item active"></div>
+                    <div class="theme-mockup-item"></div>
+                    <div class="theme-mockup-item"></div>
+                  </div>
+                  <div class="theme-mockup-content">
+                    <div class="theme-mockup-line title"></div>
+                    <div class="theme-mockup-line"></div>
+                    <div class="theme-mockup-line"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="theme-card-details">
+                <div class="theme-card-icon-pill">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                  </svg>
+                </div>
+                <div class="theme-card-text">
+                  <span class="theme-card-name">Dark</span>
+                  <span class="theme-card-desc">Easy on eyes</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- System / Auto Card -->
+            <div class="theme-card" data-theme="system" id="themeCardSystem">
+              <div class="theme-check-badge">✓</div>
+              <div class="theme-mockup-frame">
+                <div class="theme-mockup-topbar">
+                  <div class="theme-mockup-dot"></div>
+                  <div class="theme-mockup-dot"></div>
+                  <div class="theme-mockup-dot"></div>
+                </div>
+                <div class="theme-mockup-body">
+                  <div class="theme-mockup-sidebar">
+                    <div class="theme-mockup-item active"></div>
+                    <div class="theme-mockup-item"></div>
+                    <div class="theme-mockup-item"></div>
+                  </div>
+                  <div class="theme-mockup-content">
+                    <div class="theme-mockup-line title"></div>
+                    <div class="theme-mockup-line"></div>
+                    <div class="theme-mockup-line"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="theme-card-details">
+                <div class="theme-card-icon-pill">💻</div>
+                <div class="theme-card-text">
+                  <span class="theme-card-name">System</span>
+                  <span class="theme-card-desc">Syncs with OS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Text Size & Zoom Scaling -->
+        <div class="form-group" style="margin-bottom: 22px;">
+          <label style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Text Size & Zoom</span>
+            <span id="settingsFontScaleLabel" style="font-size: 0.74rem; font-weight: 600; color: var(--accent);">100% (Default)</span>
+          </label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn btn-secondary font-scale-btn" data-scale="1.0" style="flex:1; padding: 7px 0; font-size: 0.8rem; font-weight:600;">100%</button>
+            <button type="button" class="btn btn-secondary font-scale-btn" data-scale="1.15" style="flex:1; padding: 7px 0; font-size: 0.88rem; font-weight:600;">115%</button>
+            <button type="button" class="btn btn-secondary font-scale-btn" data-scale="1.30" style="flex:1; padding: 7px 0; font-size: 0.95rem; font-weight:600;">130%</button>
+            <button type="button" class="btn btn-secondary font-scale-btn" data-scale="1.45" style="flex:1; padding: 7px 0; font-size: 1.05rem; font-weight:600;">145%</button>
+          </div>
+        </div>
+
+        <!-- 3. Create & Edit Default Message Template -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Default Snippet Message Template</span>
+            <span style="font-size: 0.72rem; color: var(--accent); background: var(--accent-light); padding: 2px 7px; border-radius: 4px; font-weight: 600;">Pre-filled on + New Snippet</span>
+          </label>
+          <div class="settings-template-card">
+            <div class="settings-template-header">
+              <span>Template body</span>
+              <span>Supported: <code>{name}</code>, <code>{my_name}</code>, <code>{date}</code></span>
+            </div>
+            <textarea id="settingsDefaultTemplate" class="settings-template-textarea" rows="5"></textarea>
+          </div>
+        </div>
+
+        <!-- Agent Name & Shortcut Prefix -->
+        <div style="display: flex; gap: 14px; margin-bottom: 22px;">
+          <div class="form-group" style="flex: 1.2;">
+            <label for="settingsAuthorName">Your Name ({my_name})</label>
+            <div style="position: relative;">
+              <input type="text" id="settingsAuthorName" placeholder="Support Agent" style="padding-left: 32px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-sub);">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          </div>
+          <div class="form-group" style="width: 140px;">
+            <label for="settingsTriggerPrefix">Shortcut Prefix</label>
+            <div style="position: relative;">
+              <input type="text" id="settingsTriggerPrefix" value="/" maxlength="2" style="padding-left: 30px; font-family: monospace; font-weight: 700;">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: var(--accent);">⚡</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Floating Launcher Icon & Text Selection Tools -->
+        <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-bottom: 20px;">
+          <div style="margin-bottom: 12px;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span>
+              <span>Floating Icons & In-Page Tools</span>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 3px 0 0 0;">
+              Enable or disable browser-level floating icons and text selection popup tools.
+            </p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- 3a. Floating Browser Launcher Icon Toggle -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <div style="flex: 1; padding-right: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.15rem;">⚡</span>
+                  <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">Floating Browser Launcher Icon</span>
+                  <span id="floatingWidgetBadge" style="font-size: 0.7rem; padding: 2px 7px; border-radius: 12px; font-weight: 600; background: rgba(16, 185, 129, 0.15); color: #059669;">Visible</span>
+                </div>
+                <p style="font-size: 0.74rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.35;">
+                  Show the movable floating icon on the browser edge to open snippets and AI tools on click. (Keyboard shortcuts like <kbd style="font-size:0.7rem; padding:1px 5px; border-radius:3px; background:var(--bg-card); border:1px solid var(--border-color);">Alt+Shift+P</kbd> continue working even if hidden).
+                </p>
+              </div>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="settingsFloatingWidget" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
+                <span id="lblFloatingWidgetStatus" style="font-size: 0.84rem; font-weight: 600; color: var(--text-main);">Enabled</span>
+              </label>
+            </div>
+
+            <!-- 3b. Text Selection Quick Action Pill Toggle -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <div style="flex: 1; padding-right: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.15rem;">📝</span>
+                  <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">Text Selection Quick Action Pill</span>
+                  <span id="selectionWidgetBadge" style="font-size: 0.7rem; padding: 2px 7px; border-radius: 12px; font-weight: 600; background: rgba(16, 185, 129, 0.15); color: #059669;">Active</span>
+                </div>
+                <p style="font-size: 0.74rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.35;">
+                  Display the interactive action pill (Draft Reply, Summarize, Troubleshoot) when selecting text on web pages.
+                </p>
+              </div>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="settingsSelectionWidget" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
+                <span id="lblSelectionWidgetStatus" style="font-size: 0.84rem; font-weight: 600; color: var(--text-main);">Enabled</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. AI Provider & Models Integration (ChatGPT, Claude, Gemini, Ollama) -->
+        <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-bottom: 20px;">
+          <!-- Master AI Toggle Card -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: var(--bg-hover); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div style="flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.15rem;">🤖</span>
+                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">AI Assistant Integration</span>
+                <span id="aiStatusBadge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; background: rgba(16, 185, 129, 0.15); color: #059669;">Active</span>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.35;">
+                Enable AI reply generation in the browser floating drawer, or disable to run exclusively in lightweight Snippets-only mode.
+              </p>
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+              <input type="checkbox" id="settingsAiEnabled" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);">
+              <span id="lblAiToggleStatus" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Enabled</span>
+            </label>
+          </div>
+
+          <!-- Informative Notice When AI is Disabled -->
+          <div id="aiDisabledNotice" style="display: none; padding: 12px 14px; border-radius: 8px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); margin-bottom: 14px; color: var(--text-main); font-size: 0.82rem;">
+            <div style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #d97706; margin-bottom: 3px;">
+              <span>⚡ Snippets-Only Mode Active</span>
+            </div>
+            <div style="color: var(--text-muted); line-height: 1.4;">
+              The AI Assistant tab and AI generation panel are completely removed from the floating browser icon. The floating drawer will exclusively display your snippets, search, and folder chips.
+            </div>
+          </div>
+
+          <!-- AI Configuration Controls Container (Hidden/dimmed when disabled) -->
+          <div id="aiConfigControlsContainer">
+            <!-- Provider Selector Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div>
+                <label for="settingsAiProvider" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px;">AI Provider</label>
+                <select id="settingsAiProvider" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem; font-weight: 600;">
+                  <option value="gemini">⚡ Google Gemini (Free Tier)</option>
+                  <option value="openai">🟢 OpenAI / ChatGPT (GPT-4o)</option>
+                  <option value="claude">🟣 Anthropic Claude (Claude 3.5)</option>
+                  <option value="ollama">🖥️ Local / Custom LLM (Ollama)</option>
+                  <option value="chrome_builtin">💻 Chrome Built-in AI (Gemini Nano)</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="settingsAiModel" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px;">Model</label>
+                <input type="text" id="settingsAiModel" placeholder="gemini-1.5-flash" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem;">
+              </div>
+            </div>
+
+            <!-- API Key Row -->
+            <div id="aiApiKeyWrapper" class="form-group" style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <label for="settingsAiApiKey" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">API Key</label>
+                <span id="aiKeyHint" style="font-size: 0.72rem; color: var(--accent);">Get free key at aistudio.google.com</span>
+              </div>
+              <div style="position: relative;">
+                <input type="password" id="settingsAiApiKey" placeholder="Enter your API Key..." style="width: 100%; padding: 8px 36px 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-family: monospace; font-size: 0.84rem;">
+                <button type="button" id="btnToggleAiKeyVisibility" title="Show/Hide API Key" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.9rem; padding: 2px 4px;">👁️</button>
+              </div>
+            </div>
+
+            <!-- Custom Endpoint URL (for Ollama / Internal Server) -->
+            <div id="aiEndpointWrapper" class="form-group" style="margin-bottom: 12px; display: none;">
+              <label for="settingsAiEndpoint" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px;">Server Endpoint URL</label>
+              <input type="text" id="settingsAiEndpoint" placeholder="http://localhost:11434" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.84rem; font-family: monospace;">
+            </div>
+
+            <!-- AI Persona & Thinking Character Section -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div>
+                  <label for="settingsAiPersona" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; margin: 0;">
+                    <span>🎭</span> <span>AI Persona & Thinking Character</span>
+                  </label>
+                  <p style="font-size: 0.72rem; color: var(--text-muted); margin: 2px 0 0 0;">
+                    Controls the thinking character, domain expertise, and analytical style of the AI.
+                  </p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnOpenPersonasModal" style="font-size: 0.76rem; padding: 4px 10px;">
+                  🎨 Customize Personas
+                </button>
+              </div>
+
+              <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                  <select id="settingsAiPersona" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.84rem; font-weight: 600;">
+                    <!-- Dynamically populated -->
+                  </select>
+                </div>
+                <button type="button" id="btnTestAiConnection" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.82rem; white-space: nowrap; height: 38px;">
+                  ⚡ Test Connection
+                </button>
+              </div>
+
+              <!-- Active Persona Preview Card -->
+              <div class="active-persona-preview-card" id="activePersonaPreviewCard" style="display: flex; align-items: center; gap: 10px; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px;">
+                <span id="previewPersonaIcon" style="font-size: 1.4rem;">🛠️</span>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <strong id="previewPersonaName" style="font-size: 0.84rem; color: var(--text-main);">Support Engineer</strong>
+                    <span id="previewPersonaRole" style="font-size: 0.68rem; padding: 1px 6px; border-radius: 10px; background: var(--bg-surface); color: var(--text-muted); border: 1px solid var(--border-color);">Technical Support</span>
+                  </div>
+                  <div id="previewPersonaDesc" style="font-size: 0.73rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">Empathetic, clear, and technically accurate specialist for hosting & network issues.</div>
+                </div>
+              </div>
+
+              <div id="aiTestStatusMsg" style="font-size: 0.78rem; margin-top: 6px; min-height: 18px;"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalSettings">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveSettings">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cloud Database & Google Account Sync -->
+  <div class="modal-overlay" id="modalCloudSync">
+    <div class="modal-box" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+          </svg>
+          <span>Cloud Database & Google Account Sync</span>
+        </h3>
+        <button class="modal-close-btn" data-close="modalCloudSync">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Server Connection Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="cloudServerStatusDot" style="width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>
+            <span id="cloudServerStatusText" style="font-size: 0.82rem; font-weight: 600; color: var(--text-main);">Checking Server...</span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnTestCloudServer" style="font-size: 0.76rem; padding: 4px 8px;">
+            Test Connection
+          </button>
+        </div>
+
+        <!-- User Authentication Card -->
+        <div id="cloudUserCard" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 18px; background: var(--bg-surface);">
+          <!-- Populated dynamically via JS: either logged in profile or login prompt -->
+        </div>
+
+        <!-- Sync Actions Row -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <button type="button" class="btn btn-primary" id="btnTriggerSyncPush" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>☁️ Push Local to Cloud</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnTriggerSyncPull" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>⬇️ Pull Cloud to Local</span>
+          </button>
+        </div>
+
+        <!-- Server Configuration -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 14px;">
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">
+            Central Backend API URL
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputCloudServerUrl" value="http://localhost:4000" placeholder="http://localhost:4000" style="flex: 1; padding: 7px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.84rem;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnSaveCloudServerUrl">Save URL</button>
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">
+            Defaults to local desktop server (<kbd style="background:var(--bg-hover); padding:1px 4px; border-radius:3px;">http://localhost:4000</kbd>). Change to your production domain when deploying.
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="http://localhost:4000/admin" target="_blank" class="btn btn-secondary btn-sm" id="btnOpenAdminWebPortal" style="display: flex; align-items: center; gap: 6px; text-decoration: none; border-color: rgba(6, 182, 212, 0.4); color: var(--accent); font-weight: 600;">
+          <span>👑 Open Master Admin Console</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+        <button class="btn btn-secondary" data-close="modalCloudSync">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirm Save Settings -->
+  <div class="modal-overlay" id="modalConfirmSaveSettings">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <span>⚙️</span> Confirm Settings Update
+        </h3>
+        <button class="modal-close-btn" data-close="modalConfirmSaveSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; margin-bottom: 12px;">
+          Are you sure you want to save and apply these settings?
+        </p>
+        <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+          Your changes to appearance theme, AI provider & persona defaults, and dictation settings will be immediately synchronized across all tabs and widgets.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalConfirmSaveSettings">Cancel</button>
+        <button class="btn btn-primary" id="btnProceedSaveSettingsConfirm" style="background: var(--accent); border-color: var(--accent); color: #fff;">
+          ✓ Confirm & Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Import & Export (Clean, Understandable JSON) -->
+  <div class="modal-overlay" id="modalBackup">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3>Import & Export (JSON Backup)</h3>
+        <button class="modal-close-btn" data-close="modalBackup">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+          Export your snippets and settings in a <strong>simple, human-readable JSON format</strong> that you can easily view, share, or edit.
+        </p>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+          <button class="btn btn-primary" id="btnDownloadJSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export JSON File
+          </button>
+          
+          <label class="btn btn-secondary" style="cursor: pointer; display: inline-flex; align-items: center; margin: 0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Import JSON File
+            <input type="file" id="fileUploadJSON" accept=".json" style="display: none;">
+          </label>
+
+          <button class="btn btn-primary" id="btnLoadDefaultLibrary" type="button" style="display: inline-flex; align-items: center; margin: 0;" title="Restore and reorganize all 75 templates into Support, Network, Abuse, General, Common">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Restore All 75 Templates
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="jsonTextPreview">Simple JSON Data:</label>
+          <textarea id="jsonTextPreview" rows="10" style="font-family: monospace; font-size: 0.8rem; line-height: 1.4;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalBackup">Close</button>
+        <button class="btn btn-primary" id="btnApplyImportedJSON">Restore From JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Delete Snippet Confirmation -->
+  <div class="modal-overlay" id="modalDeleteSnippet">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Delete Snippet</h3>
+        <button class="modal-close-btn" data-close="modalDeleteSnippet">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5;">
+          Are you sure you want to delete <strong id="deleteSnippetTitleText">this snippet</strong>?
+          <br><br>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">
+            This shortcut will no longer expand when typed.
+          </span>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalDeleteSnippet">Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmDeleteSnippet">Delete Snippet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Prompt Unsaved Changes (Discard or Save) -->
+  <div class="modal-overlay" id="modalPromptUnsaved">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Unsaved Changes</h3>
+        <button class="modal-close-btn" data-close="modalPromptUnsaved">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5;">
+          You have unsaved changes in <strong id="promptSnippetTitle">current snippet</strong>. Would you like to save or discard them?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnPromptCancel">Cancel</button>
+        <button class="btn btn-danger" id="btnPromptDiscard">Discard Changes</button>
+        <button class="btn btn-primary" id="btnPromptSave">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create / Edit Main Folder -->
+  <div class="modal-overlay" id="modalFolderEdit">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="modalFolderTitle">Folder</h3>
+        <button class="modal-close-btn" data-close="modalFolderEdit">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="folderNameInput">Folder Name</label>
+          <input type="text" id="folderNameInput" placeholder="e.g. My Sample Snippets">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalFolderEdit">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveFolder">Save Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Delete Folder Confirmation -->
+  <div class="modal-overlay" id="modalDeleteFolder">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Delete Folder</h3>
+        <button class="modal-close-btn" data-close="modalDeleteFolder">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5;">
+          Are you sure you want to delete <strong id="deleteFolderName">this folder</strong>?
+          <br><br>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">
+            Snippets inside this folder will safely be moved to your primary folder.
+          </span>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalDeleteFolder">Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmDeleteFolder">Delete Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Try it Out Sandbox -->
+  <div class="modal-overlay" id="modalTryItOut">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3>⚡ Live Shortcut Sandbox</h3>
+        <button class="modal-close-btn" data-close="modalTryItOut">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+          Type your shortcut <code id="tryOutShortcutPill" style="background: var(--accent-light); color: var(--accent-pill-text); padding: 2px 6px; border-radius: 4px; font-weight: bold;">/osfail</code> (or any snippet like <code>/kkmon</code>) in the box below to test live expansion:
+        </p>
+        <textarea id="tryOutInput" rows="6" placeholder="Click here and type your shortcut (e.g. /osfail, /kkmon)..." style="width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; font-size: 0.92rem; outline: none;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnClearTryOut">Clear</button>
+        <button class="btn btn-primary" data-close="modalTryItOut">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Move Snippet to Folder -->
+  <div class="modal-overlay" id="modalMoveSnippet">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Move Snippet to Folder
+        </h3>
+        <button class="modal-close-btn" data-close="modalMoveSnippet">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+          Select a destination folder for <strong id="moveSnippetTargetTitle" style="color: var(--text-main);"></strong>:
+        </p>
+        <div id="moveFolderOptionsList" class="move-folder-options-list">
+          <!-- Rendered dynamically by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalMoveSnippet">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Dynamic Variables Manager -->
+  <div class="modal-overlay" id="modalAiVariables">
+    <div class="modal-box" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span>
+          <span>Dynamic Variables Manager</span>
+        </h3>
+        <button class="modal-close-btn" data-close="modalAiVariables">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px;">
+          Dynamic variables are placeholders like <code>{Page_context}</code> or <code>{Support_Tier}</code> that automatically resolve to live ticket data or default values when executing AI prompts.
+        </p>
+
+        <!-- Variable Manager Tabs -->
+        <div class="variable-tabs-nav" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; padding-bottom: 8px;">
+          <button type="button" class="btn btn-secondary btn-sm active" id="btnVarTabCustom" style="font-weight: 600;">
+            Custom Variables (<span id="varTabCustomCount">3</span>)
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnVarTabSystem" style="font-weight: 600;">
+            System Variables (3 Built-in)
+          </button>
+        </div>
+
+        <!-- Tab 1: Custom Variables Content -->
+        <div id="varTabContentCustom">
+          <!-- Existing Custom Variables List -->
+          <div id="customVarsTable" class="custom-vars-table" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; max-height: 240px; overflow-y: auto;">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Add / Edit Variable Form -->
+          <div class="var-editor-card" style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+            <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 10px; color: var(--text-main);" id="varFormTitle">
+              ➕ Add New Custom Variable
+            </div>
+            
+            <input type="hidden" id="editVarId">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <div>
+                <label for="varNameInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Variable Name *</label>
+                <input type="text" id="varNameInput" placeholder="e.g. Support Tier" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem;">
+              </div>
+              <div>
+                <label for="varKeyInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Placeholder Key *</label>
+                <input type="text" id="varKeyInput" placeholder="e.g. Support_Tier" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem; font-family: monospace;">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+              <label for="varDefaultInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Default Value (Optional)</label>
+              <input type="text" id="varDefaultInput" placeholder="e.g. Tier 2 Technical Support" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem;">
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label for="varDescInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Description (Optional)</label>
+              <input type="text" id="varDescInput" placeholder="Brief note on when to use this variable" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnCancelVarEdit" style="display: none;">Cancel</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnSaveCustomVar">Save Variable</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: System Variables Content -->
+        <div id="varTabContentSystem" style="display: none;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <code style="font-weight: 700; color: var(--accent); font-size: 0.92rem;">{Page_context}</code>
+                <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: rgba(0, 172, 193, 0.15); color: var(--accent); font-weight: 600;">🔒 System Variable</span>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                Automatically captures the complete visible content, ticket messages, server diagnostics, and metadata from the active webpage or ticket portal.
+              </p>
+            </div>
+
+            <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <code style="font-weight: 700; color: var(--accent); font-size: 0.92rem;">{Ticket_ID}</code>
+                <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: rgba(0, 172, 193, 0.15); color: var(--accent); font-weight: 600;">🔒 System Variable</span>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                Extracts the ticket reference identifier (e.g., <code>#4970144</code>) from the portal URL query string, page header, or breadcrumbs.
+              </p>
+            </div>
+
+            <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <code style="font-weight: 700; color: var(--accent); font-size: 0.92rem;">{Customer_Message}</code>
+                <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: rgba(0, 172, 193, 0.15); color: var(--accent); font-weight: 600;">🔒 System Variable</span>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                Extracts the client's latest message or inquiry thread, isolating customer requirements from agent replies.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" data-close="modalAiVariables">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Delete AI Prompt Confirmation -->
+  <div class="modal-overlay" id="modalDeleteAiPrompt">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="color: var(--danger);">🗑️ Delete AI Prompt</h3>
+        <button class="modal-close-btn" data-close="modalDeleteAiPrompt">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 8px;">
+          Are you sure you want to delete prompt <strong id="deletePromptTargetName" style="color: var(--text-main);"></strong>?
+        </p>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">
+          This action will permanently remove this prompt template from your saved library.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalDeleteAiPrompt">Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmDeleteAiPrompt">Delete Prompt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Preview Resolved Prompt -->
+  <div class="modal-overlay" id="modalPreviewAiPrompt">
+    <div class="modal-box" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <span>👁️</span>
+          <span>Preview Resolved Prompt</span>
+        </h3>
+        <button class="modal-close-btn" data-close="modalPreviewAiPrompt">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px;">
+          This is how your prompt template will look after all variables are replaced with their current or default values:
+        </p>
+
+        <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong id="previewModalPromptName" style="font-size: 0.9rem; color: var(--text-main);"></strong>
+            <span id="previewModalVarStatus" style="font-size: 0.74rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #059669;">✓ All Variables Resolved</span>
+          </div>
+          <pre id="previewModalResolvedText" style="white-space: pre-wrap; font-family: monospace; font-size: 0.82rem; line-height: 1.45; color: var(--text-main); margin: 0; max-height: 320px; overflow-y: auto; background: var(--bg-surface); padding: 12px; border-radius: 4px; border: 1px solid var(--border-color);"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modalPreviewAiPrompt">Close</button>
+        <button class="btn btn-primary" id="btnModalPreviewRunInLab">🚀 Test & Run in Lab</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: AI Personas & Thinking Characters Studio -->
+  <div class="modal-overlay" id="modalAiPersonas">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <span>🎭</span>
+          <span>AI Personas & Thinking Characters Studio</span>
+        </h3>
+        <button class="modal-close-btn" data-close="modalAiPersonas">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.45;">
+          Select or customize how the AI thinks, reasons, and analyzes problems. Pick from built-in character profiles (Support, AI Engineer, SysAdmin, Doctor, Marketing, Sales, CEO, Direct Analyst) or create your own custom persona.
+        </p>
+
+        <!-- Personas Grid -->
+        <div class="personas-picker-grid" id="personasPickerGrid">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Custom Persona Creator / Editor Card -->
+        <div class="persona-editor-card" id="personaEditorCard">
+          <div class="persona-editor-card-header">
+            <strong id="personaFormTitle">➕ Create / Customize Persona</strong>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">e.g. CEO, Doctor, AI Engineer, SysAdmin</span>
+          </div>
+          
+          <input type="hidden" id="editPersonaId">
+
+          <div style="display: grid; grid-template-columns: 80px 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label for="personaIconInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Icon</label>
+              <input type="text" id="personaIconInput" value="👔" maxlength="4" style="width: 100%; text-align: center; font-size: 1.2rem; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main);">
+            </div>
+            <div>
+              <label for="personaNameInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Persona Name *</label>
+              <input type="text" id="personaNameInput" placeholder="e.g. CEO / Chief Executive" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem;">
+            </div>
+            <div>
+              <label for="personaRoleInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Role / Subtitle</label>
+              <input type="text" id="personaRoleInput" placeholder="e.g. Strategic Vision & Decisions" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-surface); color: var(--text-main); font-size: 0.86rem;">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <label for="personaPromptInput" style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">
+              Thinking Character & System Instructions *
+              <span style="font-weight: normal; color: var(--text-sub);">(Define how this character analyzes questions, its priorities, tone, and formatting)</span>
+            </label>
+            <textarea id="personaPromptInput" rows="5" placeholder="Example for CEO:
+You are a visionary Chief Executive Officer (CEO).
+- Cut through operational noise and analyze problems from a high-level strategic, financial, and risk-adjusted perspective.
+- Prioritize ROI, competitive advantage, resource allocation, and organizational velocity.
+- When summarizing: deliver decisive executive directives and concise strategic summaries in prioritized bullet points. Do not format as a customer email." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: 'Fira Code', Consolas, monospace; font-size: 0.82rem; line-height: 1.45; background: var(--bg-surface); color: var(--text-main); outline: none;"></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCancelPersonaEdit" style="display: none;">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnSavePersona">Save Persona Profile</button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" data-close="modalAiPersonas">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Snippet Context Menu -->
+  <div id="snippetContextMenu" class="snippet-context-menu" style="display: none;">
+    <div class="context-menu-header" id="contextMenuTitle">Snippet</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-submenu-parent">
+      <div class="context-menu-item">
+        <span style="display: flex; align-items: center; gap: 6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Move to Folder
+        </span>
+        <span class="context-arrow">›</span>
+      </div>
+      <div class="context-submenu" id="contextSubmenuFolders">
+        <!-- Injected by JS: Support, Network, Abuse, General, Common, etc. -->
+      </div>
+    </div>
+    <div class="context-menu-item" id="contextDuplicateSnippet">
+      <span style="display: flex; align-items: center; gap: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Duplicate Snippet
+      </span>
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item danger" id="contextDeleteSnippet">
+      <span style="display: flex; align-items: center; gap: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Delete Snippet
+      </span>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="shared/default_snippets.js"></script>
+  <script src="shared/template_engine.js"></script>
+  <script src="shared/ai_service.js"></script>
+  <script src="shared/storage.js"></script>
+  <script src="shared/sync_service.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Build and release artifacts
+*.zip
+*.tar.gz
+dist/
+build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS & Editor temp files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+_metadata/
