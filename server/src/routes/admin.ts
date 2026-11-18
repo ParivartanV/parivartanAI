@@ -4,6 +4,7 @@ import prisma from '../prisma.js';
 import { requireAdmin, AuthenticatedRequest } from '../middleware/auth.js';
 import { logActivity } from '../utils/logger.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
+import { computeTrialStatus } from '../utils/trial.js';
 
 export const adminRouter = Router();
 
@@ -200,6 +201,7 @@ adminRouter.get('/overview', async (req: AuthenticatedRequest, res: Response): P
       totalPrompts,
       totalLogs,
       payments,
+      allUsers,
       recentLogs,
       recentClients
     ] = await Promise.all([
@@ -207,7 +209,8 @@ adminRouter.get('/overview', async (req: AuthenticatedRequest, res: Response): P
       prisma.snippet.count(),
       prisma.aiPrompt.count(),
       prisma.activityLog.count(),
-      prisma.payment.findMany({ select: { amount: true, status: true } }),
+      prisma.payment.findMany({ select: { amount: true, status: true, paymentMethod: true } }),
+      prisma.user.findMany({ select: { creditBalance: true } }),
       prisma.activityLog.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
@@ -222,6 +225,7 @@ adminRouter.get('/overview', async (req: AuthenticatedRequest, res: Response): P
           email: true,
           company: true,
           subscriptionPlan: true,
+          creditBalance: true,
           createdAt: true,
           lastActiveAt: true
         }
@@ -229,8 +233,10 @@ adminRouter.get('/overview', async (req: AuthenticatedRequest, res: Response): P
     ]);
 
     const totalRevenue = payments
-      .filter(p => p.status === 'completed')
+      .filter(p => p.status === 'completed' && p.paymentMethod !== 'credits' && p.paymentMethod !== 'free_credits')
       .reduce((sum, p) => sum + p.amount, 0);
+
+    const totalCredits = allUsers.reduce((sum, u) => sum + (u.creditBalance || 0), 0);
 
     res.json({
       success: true,
@@ -240,6 +246,7 @@ adminRouter.get('/overview', async (req: AuthenticatedRequest, res: Response): P
         totalPrompts,
         totalLogs,
         totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalCredits: Math.round(totalCredits * 100) / 100,
         completedTransactions: payments.filter(p => p.status === 'completed').length
       },
       recentLogs,
@@ -284,8 +291,10 @@ adminRouter.get('/clients', async (req: AuthenticatedRequest, res: Response): Pr
 
     const formatted = clients.map(c => {
       const totalPaid = c.payments
-        .filter(p => p.status === 'completed')
+        .filter(p => p.status === 'completed' && p.paymentMethod !== 'credits' && p.paymentMethod !== 'free_credits')
         .reduce((sum, p) => sum + p.amount, 0);
+
+      const trial = computeTrialStatus(c);
 
       return {
         id: c.id,
@@ -296,6 +305,10 @@ adminRouter.get('/clients', async (req: AuthenticatedRequest, res: Response): Pr
         avatarUrl: c.avatarUrl,
         plan: c.subscriptionPlan,
         status: c.subscriptionStatus,
+        trialEndsAt: c.trialEndsAt,
+        billingCycle: c.billingCycle,
+        trial,
+        creditBalance: Math.round((c.creditBalance || 0) * 100) / 100,
         lastActiveAt: c.lastActiveAt,
         createdAt: c.createdAt,
         counts: c._count,
@@ -346,6 +359,7 @@ adminRouter.get('/clients/:id', async (req: AuthenticatedRequest, res: Response)
       success: true,
       client: {
         ...client,
+        trial: computeTrialStatus(client),
         totalPaid: Math.round(totalPaid * 100) / 100
       }
     });
@@ -355,7 +369,7 @@ adminRouter.get('/clients/:id', async (req: AuthenticatedRequest, res: Response)
 });
 
 /**
- * 💳 Link a Payment to a Client Profile
+ * 💳 Link a Payment to a Client Profile (Supports Credit Card, PayPal, Wire, and Credits)
  */
 adminRouter.post('/clients/:id/payments', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -377,17 +391,46 @@ adminRouter.post('/clients/:id/payments', async (req: AuthenticatedRequest, res:
       return;
     }
 
-    const txId = transactionId || `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const numAmount = Number(amount);
+    const method = (paymentMethod || 'credit_card').toLowerCase();
+
+    // If using credits as the payment method, check client balance and deduct
+    if (method === 'credits') {
+      const clientUser = await prisma.user.findUnique({ where: { id: clientId } });
+      if (!clientUser) {
+        res.status(404).json({ error: 'Client not found' });
+        return;
+      }
+      const currentBalance = clientUser.creditBalance || 0;
+      if (currentBalance < numAmount) {
+        res.status(400).json({
+          error: `Insufficient credit balance. Client only has ${currentBalance.toFixed(2)} credits, but transaction requires ${numAmount.toFixed(2)} credits.`
+        });
+        return;
+      }
+      await prisma.user.update({
+        where: { id: clientId },
+        data: { creditBalance: { decrement: numAmount } }
+      });
+    } else if (method === 'free_credits') {
+      // Allocate credits to balance
+      await prisma.user.update({
+        where: { id: clientId },
+        data: { creditBalance: { increment: numAmount } }
+      });
+    }
+
+    const txId = transactionId || `${method === 'credits' ? 'CRD_PAY' : 'TXN'}_${Date.now()}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
     const payment = await prisma.payment.create({
       data: {
         userId: clientId,
-        amount: Number(amount),
-        currency: currency || 'USD',
+        amount: numAmount,
+        currency: method === 'credits' || method === 'free_credits' ? 'CREDITS' : (currency || 'USD'),
         status: status || 'completed',
         planName,
         transactionId: txId,
-        paymentMethod: paymentMethod || 'credit_card',
+        paymentMethod: method,
         invoiceUrl: invoiceUrl || null,
         paidAt: paidAt ? new Date(paidAt) : new Date()
       }
@@ -406,19 +449,108 @@ adminRouter.post('/clients/:id/payments', async (req: AuthenticatedRequest, res:
 
     await logActivity({
       userId: clientId,
-      action: 'PAYMENT_RECORDED',
+      action: method === 'credits' ? 'PAYMENT_VIA_CREDITS' : (method === 'free_credits' ? 'FREE_CREDIT_GRANTED' : 'PAYMENT_RECORDED'),
       category: 'billing',
       details: {
-        amount,
+        amount: numAmount,
+        paymentMethod: method,
         planName,
         transactionId: txId,
         recordedBy: req.userEmail
       }
     });
 
-    res.json({ success: true, payment });
+    // Fetch updated user to return latest balance
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: clientId },
+      select: { id: true, creditBalance: true, subscriptionPlan: true }
+    });
+
+    res.json({
+      success: true,
+      payment,
+      client: updatedUser
+    });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to record payment', details: err.message });
+  }
+});
+
+/**
+ * 🎁 Allocate / Adjust Free Credits for a Client Profile
+ */
+adminRouter.post('/clients/:id/credits', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const clientId = req.params.id;
+    const { amount, type = 'add', reason = 'Free Credit Allocation', note } = req.body;
+    const numAmount = Number(amount);
+
+    if (isNaN(numAmount) || numAmount <= 0) {
+      res.status(400).json({ error: 'A valid positive credit amount is required' });
+      return;
+    }
+
+    const client = await prisma.user.findUnique({ where: { id: clientId } });
+    if (!client) {
+      res.status(404).json({ error: 'Client not found' });
+      return;
+    }
+
+    let newBalance = client.creditBalance || 0;
+    if (type === 'add') {
+      newBalance += numAmount;
+    } else if (type === 'deduct') {
+      if (newBalance < numAmount) {
+        res.status(400).json({ error: `Cannot deduct ${numAmount} credits: Client only has ${newBalance.toFixed(2)} credits.` });
+        return;
+      }
+      newBalance -= numAmount;
+    } else if (type === 'set') {
+      newBalance = numAmount;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: clientId },
+      data: { creditBalance: Math.round(newBalance * 100) / 100 }
+    });
+
+    const txId = `CREDIT_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const payment = await prisma.payment.create({
+      data: {
+        userId: clientId,
+        amount: numAmount,
+        currency: 'CREDITS',
+        status: 'completed',
+        planName: `${type === 'deduct' ? 'Credit Deduction' : 'Free Credit Allocation'}: ${reason}`,
+        transactionId: txId,
+        paymentMethod: type === 'deduct' ? 'credits' : 'free_credits',
+        invoiceUrl: note || null,
+        paidAt: new Date()
+      }
+    });
+
+    await logActivity({
+      userId: clientId,
+      action: type === 'deduct' ? 'CREDIT_DEDUCTED' : 'FREE_CREDIT_ALLOCATED',
+      category: 'billing',
+      details: {
+        amount: numAmount,
+        type,
+        previousBalance: client.creditBalance,
+        newBalance: updatedUser.creditBalance,
+        reason,
+        allocatedBy: req.userEmail
+      }
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully allocated ${numAmount} credits to ${client.name || client.email}. New Balance: ${updatedUser.creditBalance.toFixed(2)} Credits.`,
+      newBalance: updatedUser.creditBalance,
+      payment
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to allocate credits', details: err.message });
   }
 });
 
@@ -449,6 +581,59 @@ adminRouter.put('/clients/:id/plan', async (req: AuthenticatedRequest, res: Resp
     res.json({ success: true, client: updated });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to update client subscription', details: err.message });
+  }
+});
+
+/**
+ * ⏳ Extend Client's 1-Month Free Trial (+30 days)
+ */
+adminRouter.post('/clients/:id/extend-trial', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const clientId = req.params.id;
+    const daysToAdd = Number(req.body.days) || 30;
+
+    const client = await prisma.user.findUnique({ where: { id: clientId } });
+    if (!client) {
+      res.status(404).json({ error: 'Client not found' });
+      return;
+    }
+
+    const currentEnd = client.trialEndsAt && new Date(client.trialEndsAt) > new Date()
+      ? new Date(client.trialEndsAt)
+      : new Date();
+
+    const newTrialEndsAt = new Date(currentEnd.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: clientId },
+      data: {
+        trialEndsAt: newTrialEndsAt,
+        subscriptionStatus: 'trial',
+        subscriptionPlan: client.subscriptionPlan === 'free' ? 'trial' : client.subscriptionPlan
+      }
+    });
+
+    await logActivity({
+      userId: clientId,
+      action: 'TRIAL_EXTENDED',
+      category: 'billing',
+      details: {
+        daysAdded: daysToAdd,
+        newTrialEndsAt,
+        extendedBy: req.userEmail
+      }
+    });
+
+    const trial = computeTrialStatus(updatedUser);
+
+    res.json({
+      success: true,
+      message: `✓ Free trial extended by ${daysToAdd} days for ${client.name || client.email}. Valid until ${newTrialEndsAt.toLocaleDateString()}.`,
+      trial,
+      client: updatedUser
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to extend trial', details: err.message });
   }
 });
 

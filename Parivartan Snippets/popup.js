@@ -13,9 +13,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnPopupThemeToggle = document.getElementById('btnPopupThemeToggle');
   const popupThemeIcon = document.getElementById('popupThemeIcon');
   const popupUserPill = document.getElementById('popupUserPill');
+  const popupTrialPill = document.getElementById('popupTrialPill');
   const btnPopupLogout = document.getElementById('btnPopupLogout');
   const popupAuthLockScreen = document.getElementById('popupAuthLockScreen');
+  const popupTrialExpiredScreen = document.getElementById('popupTrialExpiredScreen');
   const popupMainContent = document.getElementById('popupMainContent');
+  const btnPopupBuyCredits = document.getElementById('btnPopupBuyCredits');
+  const btnPopupSubscribeMonthly = document.getElementById('btnPopupSubscribeMonthly');
   const btnPopupGoogleLogin = document.getElementById('btnPopupGoogleLogin');
   const btnPopupPresetMaster = document.getElementById('btnPopupPresetMaster');
   const formPopupLogin = document.getElementById('formPopupLogin');
@@ -37,22 +41,111 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentUser) {
       // Locked: Access denied until login
       if (popupAuthLockScreen) popupAuthLockScreen.style.display = 'flex';
+      if (popupTrialExpiredScreen) popupTrialExpiredScreen.style.display = 'none';
       if (popupMainContent) popupMainContent.style.display = 'none';
       if (popupUserPill) popupUserPill.style.display = 'none';
+      if (popupTrialPill) popupTrialPill.style.display = 'none';
       if (btnPopupLogout) btnPopupLogout.style.display = 'none';
       return false;
     }
 
-    // Unlocked: Client is authenticated
     if (popupAuthLockScreen) popupAuthLockScreen.style.display = 'none';
+
+    // Check 1-Month Free Trial / Credit Status
+    let trial = null;
+    if (window.SyncService) {
+      const billing = await window.SyncService.fetchLiveBillingStatus();
+      trial = billing?.trial || (await window.SyncService.getTrialStatus());
+    }
+
+    const isMaster = (currentUser.email || '').toLowerCase().includes('parivartan') || currentUser.role === 'admin';
+    const canAccess = isMaster || (trial ? trial.canAccess : true);
+
+    if (!canAccess) {
+      // 1-Month Trial Expired and 0 credits: Show Upgrade / Buy Credits Screen
+      if (popupTrialExpiredScreen) popupTrialExpiredScreen.style.display = 'flex';
+      if (popupMainContent) popupMainContent.style.display = 'none';
+      if (popupUserPill) {
+        popupUserPill.style.display = 'inline-block';
+        popupUserPill.textContent = currentUser.name || currentUser.email;
+      }
+      if (popupTrialPill) {
+        popupTrialPill.style.display = 'inline-block';
+        popupTrialPill.textContent = '🔴 Expired';
+        popupTrialPill.style.color = '#ef4444';
+        popupTrialPill.style.background = 'rgba(239, 68, 68, 0.12)';
+      }
+      if (btnPopupLogout) btnPopupLogout.style.display = 'inline-flex';
+      return false;
+    }
+
+    // Unlocked: Client is authenticated and has valid trial, paid plan, or credits
+    if (popupTrialExpiredScreen) popupTrialExpiredScreen.style.display = 'none';
     if (popupMainContent) popupMainContent.style.display = 'flex';
     if (popupUserPill) {
       popupUserPill.style.display = 'inline-block';
       popupUserPill.textContent = currentUser.name || currentUser.email;
     }
+    if (popupTrialPill) {
+      popupTrialPill.style.display = 'inline-block';
+      if (isMaster) {
+        popupTrialPill.textContent = '👑 Master';
+        popupTrialPill.style.color = '#eab308';
+        popupTrialPill.style.background = 'rgba(234, 179, 8, 0.12)';
+      } else if (trial?.isPaidPlan) {
+        popupTrialPill.textContent = '⭐ Pro';
+        popupTrialPill.style.color = '#4f46e5';
+        popupTrialPill.style.background = 'rgba(79, 70, 229, 0.12)';
+      } else if (trial?.isTrialActive) {
+        popupTrialPill.textContent = `🟢 ${trial.trialDaysLeft}d free trial`;
+        popupTrialPill.style.color = '#10b981';
+        popupTrialPill.style.background = 'rgba(16, 185, 129, 0.12)';
+      } else {
+        popupTrialPill.textContent = `🪙 ${(trial?.creditBalance || 0).toFixed(0)}c`;
+        popupTrialPill.style.color = '#06b6d4';
+        popupTrialPill.style.background = 'rgba(6, 182, 212, 0.12)';
+      }
+    }
     if (btnPopupLogout) btnPopupLogout.style.display = 'inline-flex';
     return true;
   }
+
+  // --- Purchase / Subscription Handlers ---
+  btnPopupBuyCredits?.addEventListener('click', async () => {
+    try {
+      btnPopupBuyCredits.disabled = true;
+      btnPopupBuyCredits.textContent = 'Purchasing 100 Credits...';
+      if (window.SyncService) {
+        await window.SyncService.buyCredits('small');
+      }
+      alert('✓ 100 Credits purchased successfully! Workspace unlocked.');
+      await checkAuthAndRender();
+      loadSnippetsData();
+    } catch (err) {
+      alert(`Error purchasing credits: ${err.message}`);
+    } finally {
+      btnPopupBuyCredits.disabled = false;
+      btnPopupBuyCredits.textContent = '🪙 Buy 100 Credits ($10.00)';
+    }
+  });
+
+  btnPopupSubscribeMonthly?.addEventListener('click', async () => {
+    try {
+      btnPopupSubscribeMonthly.disabled = true;
+      btnPopupSubscribeMonthly.textContent = 'Activating Pro Monthly...';
+      if (window.SyncService) {
+        await window.SyncService.subscribeMonthly('pro');
+      }
+      alert('✓ Pro Monthly Subscription activated! Workspace unlocked.');
+      await checkAuthAndRender();
+      loadSnippetsData();
+    } catch (err) {
+      alert(`Error subscribing: ${err.message}`);
+    } finally {
+      btnPopupSubscribeMonthly.disabled = false;
+      btnPopupSubscribeMonthly.textContent = '⭐ Subscribe Pro ($9.99/mo)';
+    }
+  });
 
   // --- Auth Handlers ---
   btnPopupLogout?.addEventListener('click', async () => {
@@ -70,40 +163,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (popupAuthError) popupAuthError.style.display = 'none';
     try {
       btnPopupGoogleLogin.textContent = 'Authenticating...';
-      if (chrome?.identity?.getAuthToken && window.SyncService) {
+      if (window.SyncService) {
         await window.SyncService.googleLogin();
-      } else {
-        const googleEmail = prompt('Sign in with Google Account:\nEnter Google Email address:', 'parivartanvishalsingh@gmail.com');
-        if (!googleEmail) return;
-        const isMaster = googleEmail.toLowerCase() === 'parivartanvishalsingh@gmail.com';
-        if (window.SyncService) {
-          await window.SyncService.devLogin(
-            googleEmail,
-            isMaster ? 'Vishal Singh' : googleEmail.split('@')[0],
-            isMaster ? 'admin' : 'user',
-            isMaster ? 'Parivartan HQ' : null,
-            isMaster ? 'kmbl1110' : null,
-            isMaster ? '312866' : null
-          );
-        }
       }
       await checkAuthAndRender();
       loadSnippetsData();
     } catch (e) {
-      const googleEmail = prompt('Google Sign-In fallback:\nEnter Google Email address:', 'parivartanvishalsingh@gmail.com');
-      if (googleEmail && window.SyncService) {
-        const isMaster = googleEmail.toLowerCase() === 'parivartanvishalsingh@gmail.com';
-        await window.SyncService.devLogin(
-          googleEmail,
-          isMaster ? 'Vishal Singh' : googleEmail.split('@')[0],
-          isMaster ? 'admin' : 'user',
-          isMaster ? 'Parivartan HQ' : null,
-          isMaster ? 'kmbl1110' : null,
-          isMaster ? '312866' : null
-        );
-        await checkAuthAndRender();
-        loadSnippetsData();
-      } else if (popupAuthError) {
+      if (popupAuthError) {
         popupAuthError.textContent = `Google Sign-In: ${e.message}`;
         popupAuthError.style.display = 'block';
       }
@@ -144,20 +210,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           pin || (isMaster ? '312866' : null)
         );
       }
-      await checkAuthAndRender();
-      loadSnippetsData();
-    } catch (err) {
-      if (popupAuthError) {
-        popupAuthError.textContent = err.message || 'Login failed';
-        popupAuthError.style.display = 'block';
-      }
-    } finally {
-      if (btnPopupSubmitLogin) {
-        btnPopupSubmitLogin.disabled = false;
-        btnPopupSubmitLogin.textContent = '⚡ Sign In & Unlock Snippets';
-      }
-    }
-  });
       await checkAuthAndRender();
       loadSnippetsData();
     } catch (err) {

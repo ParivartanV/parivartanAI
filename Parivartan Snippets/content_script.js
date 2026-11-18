@@ -280,18 +280,29 @@
   // --- Client Authentication Enforcement ---
   let isClientLoggedIn = false;
   let currentClientUser = null;
+  let currentClientTrial = null;
+
+  function canClientExpand() {
+    if (!isClientLoggedIn) return false;
+    if (!currentClientUser) return false;
+    const isMaster = (currentClientUser.email || '').toLowerCase().includes('parivartan') || currentClientUser.role === 'admin';
+    if (isMaster) return true;
+    if (!currentClientTrial) return true;
+    return currentClientTrial.canAccess !== false;
+  }
 
   // --- Load Data from Storage ---
   function loadSnippetsAndSettings() {
     if (isExtensionValid() && chrome.storage?.local) {
       try {
-        chrome.storage.local.get(['snippets', 'settings', 'folders', 'customAiPrompts', 'customAiVariables', 'customAiPersonas', 'cloudAuthToken', 'cloudUser'], (res) => {
+        chrome.storage.local.get(['snippets', 'settings', 'folders', 'customAiPrompts', 'customAiVariables', 'customAiPersonas', 'cloudAuthToken', 'cloudUser', 'cloudTrial'], (res) => {
           if (chrome.runtime?.lastError) {
             loadFromLocalStorage();
             return;
           }
           isClientLoggedIn = !!(res && res.cloudAuthToken && res.cloudUser);
           currentClientUser = res ? res.cloudUser : null;
+          currentClientTrial = res ? res.cloudTrial : null;
 
           let storageSnippets = res ? res.snippets : null;
           let storageFolders = res ? res.folders : null;
@@ -458,10 +469,11 @@
     try {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.cloudAuthToken || changes.cloudUser) {
-            chrome.storage.local.get(['cloudAuthToken', 'cloudUser'], (res) => {
+          if (changes.cloudAuthToken || changes.cloudUser || changes.cloudTrial) {
+            chrome.storage.local.get(['cloudAuthToken', 'cloudUser', 'cloudTrial'], (res) => {
               isClientLoggedIn = !!(res && res.cloudAuthToken && res.cloudUser);
               currentClientUser = res ? res.cloudUser : null;
+              currentClientTrial = res ? res.cloudTrial : null;
             });
           }
           if (changes.snippets && changes.snippets.newValue) {
@@ -783,6 +795,10 @@
       showAuthRequiredToast();
       return;
     }
+    if (!canClientExpand()) {
+      showTrialExpiredToast();
+      return;
+    }
 
     const { snippet, shortcutLen } = match;
     typedBuffer = ''; // Reset buffer immediately
@@ -909,11 +925,23 @@
     showInPageToast('🔒 Parivartan Snippet is locked. Please sign in to expand shortcuts.');
   }
 
+  function showTrialExpiredToast() {
+    const now = Date.now();
+    if (now - authToastDebounce < 3000) return;
+    authToastDebounce = now;
+    showInPageToast('⚠️ 1-Month Free Trial has expired. Please buy credits or subscribe monthly to continue expanding shortcuts.');
+  }
+
   function showCommandPalette() {
     removeModal();
 
     if (!isClientLoggedIn) {
       showAuthRequiredModal();
+      return;
+    }
+
+    if (!canClientExpand()) {
+      showInPageToast('⚠️ 1-Month Free Trial has expired. Please buy credits or subscribe monthly in the extension.');
       return;
     }
 

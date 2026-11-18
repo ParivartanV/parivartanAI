@@ -8,6 +8,7 @@ import { syncRouter } from './routes/sync.js';
 import { snippetsRouter } from './routes/snippets.js';
 import { aiRouter } from './routes/ai.js';
 import { adminRouter } from './routes/admin.js';
+import { billingRouter } from './routes/billing.js';
 import prisma from './prisma.js';
 
 dotenv.config();
@@ -64,6 +65,7 @@ app.use('/api/sync', syncRouter);
 app.use('/api/snippets', snippetsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/billing', billingRouter);
 
 // Start Server
 const server = app.listen(PORT, async () => {

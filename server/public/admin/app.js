@@ -57,6 +57,7 @@ const tabPanes = document.querySelectorAll('.tab-pane');
 const kpiClients = document.getElementById('kpiClients');
 const kpiRevenue = document.getElementById('kpiRevenue');
 const kpiPaidTxnCount = document.getElementById('kpiPaidTxnCount');
+const kpiCredits = document.getElementById('kpiCredits');
 const kpiSnippets = document.getElementById('kpiSnippets');
 const kpiLogs = document.getElementById('kpiLogs');
 const tabCountClients = document.getElementById('tabCountClients');
@@ -79,6 +80,20 @@ const modalNewPayment = document.getElementById('modalNewPayment');
 const btnOpenNewPaymentModal = document.getElementById('btnOpenNewPaymentModal');
 const formNewPayment = document.getElementById('formNewPayment');
 const paymentClientSelect = document.getElementById('paymentClientSelect');
+
+// Allocate Free Credits Modal Elements
+const modalAllocateCredits = document.getElementById('modalAllocateCredits');
+const btnOpenAllocateCreditsModal = document.getElementById('btnOpenAllocateCreditsModal');
+const formAllocateCredits = document.getElementById('formAllocateCredits');
+const creditClientSelect = document.getElementById('creditClientSelect');
+const creditCurrentBalanceNotice = document.getElementById('creditCurrentBalanceNotice');
+const creditAmountInput = document.getElementById('creditAmountInput');
+const creditTypeSelect = document.getElementById('creditTypeSelect');
+const creditReasonSelect = document.getElementById('creditReasonSelect');
+const creditCustomReasonGroup = document.getElementById('creditCustomReasonGroup');
+const creditCustomReasonInput = document.getElementById('creditCustomReasonInput');
+const creditNoteInput = document.getElementById('creditNoteInput');
+const btnSubmitAllocateCredits = document.getElementById('btnSubmitAllocateCredits');
 
 // --- Helper Functions ---
 function getAuthHeaders() {
@@ -105,6 +120,29 @@ function getPlanBadge(plan) {
   if (p === 'enterprise') return `<span class="badge badge-enterprise">Enterprise</span>`;
   if (p === 'pro') return `<span class="badge badge-pro">Pro</span>`;
   return `<span class="badge badge-free">Free</span>`;
+}
+
+function getSubscriptionBadge(c) {
+  if (c.role === 'admin' || (c.email && c.email.includes('parivartan'))) {
+    return `<span class="badge" style="background:rgba(234,179,8,0.15); color:#eab308; font-weight:700;">👑 Master Enterprise</span>`;
+  }
+  const plan = (c.plan || 'trial').toLowerCase();
+  if (plan === 'enterprise') return `<span class="badge badge-enterprise">Enterprise Monthly</span>`;
+  if (plan === 'pro') return `<span class="badge badge-pro">Pro Monthly</span>`;
+
+  if (c.trial?.isTrialActive) {
+    const days = c.trial.trialDaysLeft;
+    const color = days > 7 ? '#10b981' : (days > 2 ? '#f59e0b' : '#ef4444');
+    const bg = days > 7 ? 'rgba(16,185,129,0.15)' : (days > 2 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)');
+    return `<span class="badge" style="background:${bg}; color:${color}; font-weight:600;">🟢 Free Trial (${days}d left)</span>`;
+  }
+
+  const credits = c.creditBalance || 0;
+  if (credits > 0) {
+    return `<span class="badge" style="background:rgba(6,182,212,0.15); color:var(--accent); font-weight:600;">🪙 Pay-As-You-Go (${credits.toFixed(0)}c)</span>`;
+  }
+
+  return `<span class="badge" style="background:rgba(239,68,68,0.15); color:#ef4444; font-weight:600;">🔴 Trial Expired (Need Credits)</span>`;
 }
 
 function getStatusBadge(status) {
@@ -325,46 +363,58 @@ presetNewClientLogin?.addEventListener('click', () => {
 });
 
 // Google Authentication for Web Admin Portal
-btnGoogleWebLogin?.addEventListener('click', () => {
-  if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-    google.accounts.id.initialize({
-      client_id: '921345678901-placeholder.apps.googleusercontent.com',
-      callback: handleGoogleAuthResponse
-    });
-    google.accounts.id.prompt();
-  } else {
-    // Interactive Google account prompt for local testing
-    const googleEmail = prompt('Sign in with Google Account:\nEnter Google Email address:', 'parivartanvishalsingh@gmail.com');
-    if (!googleEmail) return;
-    const isMaster = googleEmail.toLowerCase() === 'parivartanvishalsingh@gmail.com';
-    const googleName = isMaster ? 'Vishal Singh' : googleEmail.split('@')[0];
+btnGoogleWebLogin?.addEventListener('click', async () => {
+  try {
+    let cfg = { configured: false, clientId: null };
+    try {
+      const cfgRes = await fetch(`${API_BASE}/api/auth/google/config`);
+      if (cfgRes.ok) cfg = await cfgRes.json();
+    } catch (_) {}
 
-    fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: googleEmail,
-        name: googleName,
-        password: isMaster ? 'kmbl1110' : undefined,
-        pin: isMaster ? '312866' : undefined,
-        role: isMaster ? 'admin' : 'user'
-      })
-    }).then(async res => {
-      if (res.ok) {
+    if (cfg.configured && cfg.clientId && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({
+        client_id: cfg.clientId,
+        callback: handleGoogleAuthResponse
+      });
+      google.accounts.id.prompt();
+    } else {
+      // Local development or pending Google Cloud Client ID setup
+      const googleEmail = prompt('Sign in with Google Account:\nEnter Google Email address:', 'parivartanvishalsingh@gmail.com');
+      if (!googleEmail) return;
+      const isMaster = googleEmail.toLowerCase() === 'parivartanvishalsingh@gmail.com';
+      let pin = isMaster ? '312866' : '';
+
+      const submitGoogleLogin = async (attemptPin) => {
+        const res = await fetch(`${API_BASE}/api/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: googleEmail,
+            name: isMaster ? 'Vishal Singh' : googleEmail.split('@')[0],
+            pin: attemptPin || undefined
+          })
+        });
         const data = await res.json();
+        if (data.require2fa) {
+          const promptPin = prompt('Two-Factor Authentication: Enter 6-digit Master PIN (312866):', '312866');
+          if (!promptPin) return;
+          return submitGoogleLogin(promptPin);
+        }
+        if (!res.ok) {
+          throw new Error(data.error || 'Google sign-in failed');
+        }
         adminJwt = data.jwt;
         localStorage.setItem('parivartan_admin_jwt', data.jwt);
         currentUser = data.user;
         modalPortalLogin.classList.remove('open');
         renderUserState(data.user);
         alert(`✓ Signed in with Google as ${data.user.email} (${data.user.role === 'admin' ? '👑 Master Admin' : '👤 Client User'})!`);
-      } else {
-        const err = await res.json();
-        alert(`Google sign-in error: ${err.error || 'Failed'}`);
-      }
-    }).catch(err => {
-      alert(`Google sign-in error: ${err.message}`);
-    });
+      };
+
+      await submitGoogleLogin(pin);
+    }
+  } catch (err) {
+    alert(`Google Sign-In: ${err.message}`);
   }
 });
 
@@ -376,8 +426,13 @@ async function handleGoogleAuthResponse(response) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: response.credential })
     });
+    const data = await res.json();
+    if (data.require2fa) {
+      const promptPin = prompt('Two-Factor Authentication: Enter 6-digit Master PIN (312866):', '312866');
+      if (!promptPin) return;
+      return handleGoogleAuthResponse({ credential: response.credential, pin: promptPin });
+    }
     if (res.ok) {
-      const data = await res.json();
       adminJwt = data.jwt;
       localStorage.setItem('parivartan_admin_jwt', data.jwt);
       currentUser = data.user;
@@ -385,8 +440,7 @@ async function handleGoogleAuthResponse(response) {
       renderUserState(data.user);
       alert(`✓ Google Authentication successful as ${data.user.email}!`);
     } else {
-      const err = await res.json();
-      alert(`Google authentication rejected: ${err.error || 'Invalid token'}`);
+      alert(`Google authentication rejected: ${data.error || 'Invalid token'}`);
     }
   } catch (err) {
     alert(`Google Authentication error: ${err.message}`);
@@ -528,6 +582,7 @@ async function loadOverview() {
     kpiClients.textContent = stats.totalClients;
     kpiRevenue.textContent = `$${stats.totalRevenue.toFixed(2)}`;
     kpiPaidTxnCount.textContent = `${stats.completedTransactions} completed transactions`;
+    if (kpiCredits) kpiCredits.textContent = (stats.totalCredits || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     kpiSnippets.textContent = stats.totalSnippets;
     kpiLogs.textContent = stats.totalLogs;
 
@@ -594,13 +649,20 @@ async function loadClients() {
 
     // Populate client dropdown for New Payment modal
     paymentClientSelect.innerHTML = currentClientsList.map(c => `
-      <option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.email)}) — Current: ${c.plan.toUpperCase()}</option>
+      <option value="${c.id}" data-credits="${c.creditBalance || 0}">${escapeHTML(c.name)} (${escapeHTML(c.email)}) — Current: ${c.plan.toUpperCase()} [🪙 ${(c.creditBalance || 0).toFixed(0)} Credits]</option>
     `).join('');
+
+    // Populate client dropdown for Allocate Credits modal
+    if (creditClientSelect) {
+      creditClientSelect.innerHTML = currentClientsList.map(c => `
+        <option value="${c.id}" data-credits="${c.creditBalance || 0}">${escapeHTML(c.name)} (${escapeHTML(c.email)}) — Balance: ${(c.creditBalance || 0).toFixed(1)} Credits</option>
+      `).join('');
+    }
 
     tabCountClients.textContent = currentClientsList.length;
 
     if (currentClientsList.length === 0) {
-      tblClientsList.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:24px;">No clients found matching criteria</td></tr>`;
+      tblClientsList.innerHTML = `<tr><td colspan="8" class="text-center text-muted" style="padding:24px;">No clients found matching criteria</td></tr>`;
       return;
     }
 
@@ -617,8 +679,13 @@ async function loadClients() {
         </td>
         <td>${escapeHTML(c.company || '—')}</td>
         <td>
-          ${getPlanBadge(c.plan)}
-          <div style="margin-top: 2px;">${getStatusBadge(c.status)}</div>
+          ${getSubscriptionBadge(c)}
+          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">${c.billingCycle === 'monthly' ? 'Monthly auto-renew' : '1-Mo Free Trial'}</div>
+        </td>
+        <td>
+          <span style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: rgba(6, 182, 212, 0.12); color: var(--accent); font-weight: 700; font-size: 0.85rem;">
+            🪙 ${(c.creditBalance || 0).toFixed(1)}
+          </span>
         </td>
         <td>
           <strong style="color: var(--success);">$${c.totalPaid.toFixed(2)}</strong>
@@ -630,8 +697,11 @@ async function loadClients() {
         </td>
         <td>${formatDate(c.lastActiveAt || c.createdAt)}</td>
         <td>
-          <button class="btn btn-secondary btn-sm" onclick="openClientDossier('${c.id}')">
-            🔍 View Dossier
+          <button class="btn btn-primary btn-sm" onclick="openAllocateCreditsModal('${c.id}')" style="margin-right: 4px; padding: 4px 8px; font-size: 0.78rem;">
+            🎁 Credits
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="openClientDossier('${c.id}')" style="padding: 4px 8px; font-size: 0.78rem;">
+            🔍 Dossier
           </button>
         </td>
       </tr>
@@ -668,6 +738,16 @@ window.openClientDossier = async function(clientId) {
           <div style="font-size:1.15rem; font-weight:700;">${escapeHTML(client.name)}</div>
           <div style="font-size:0.84rem; color:var(--text-muted);">${escapeHTML(client.email)} • Company: <strong>${escapeHTML(client.company || 'Not set')}</strong></div>
           <div style="font-size:0.78rem; color:var(--text-dim); margin-top:4px;">Registered: ${formatDate(client.createdAt)} • Last Active: ${formatDate(client.lastActiveAt)}</div>
+          <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(6,182,212,0.12); padding:4px 10px; border-radius:6px;">
+              <span style="font-size:0.85rem; font-weight:700; color:var(--accent);">🪙 Credit Balance: ${(client.creditBalance || 0).toFixed(2)} Credits</span>
+              <button class="btn btn-primary btn-sm" onclick="modalClientDossier.classList.remove('open'); openAllocateCreditsModal('${client.id}')" style="padding:2px 8px; font-size:0.75rem;">+ Allocate Credits</button>
+            </div>
+            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.12); padding:4px 10px; border-radius:6px;">
+              <span style="font-size:0.85rem; font-weight:600; color:#10b981;">⏳ ${escapeHTML(client.trial?.message || '1-Month Free Trial')}</span>
+              <button class="btn btn-secondary btn-sm" onclick="extendClientTrial('${client.id}')" style="padding:2px 8px; font-size:0.75rem;">+30 Days Trial</button>
+            </div>
+          </div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
           <div style="display:flex; gap:8px; align-items:center;">
@@ -715,16 +795,26 @@ window.openClientDossier = async function(clientId) {
             <table class="data-table" style="font-size:0.8rem;">
               <thead><tr><th>Transaction ID</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
               <tbody>
-                ${client.payments.map(p => `
-                  <tr>
-                    <td><code style="font-size:0.75rem;">${escapeHTML(p.transactionId)}</code></td>
-                    <td>${escapeHTML(p.planName)}</td>
-                    <td><strong>$${p.amount.toFixed(2)}</strong></td>
-                    <td>${escapeHTML(p.paymentMethod)}</td>
-                    <td>${getStatusBadge(p.status)}</td>
-                    <td>${formatDate(p.paidAt)}</td>
-                  </tr>
-                `).join('')}
+                ${client.payments.map(p => {
+                  const isCreditMethod = p.paymentMethod === 'credits' || p.paymentMethod === 'free_credits' || p.currency === 'CREDITS';
+                  const methodBadge = p.paymentMethod === 'credits' 
+                    ? '<span class="badge" style="background:rgba(6,182,212,0.15); color:var(--accent);">🪙 Credits Balance</span>'
+                    : (p.paymentMethod === 'free_credits' 
+                        ? '<span class="badge" style="background:rgba(234,179,8,0.15); color:#eab308;">🎁 Free Credit Grant</span>'
+                        : escapeHTML(p.paymentMethod));
+                  const amountDisplay = isCreditMethod ? `<strong>🪙 ${p.amount.toFixed(0)} Credits</strong>` : `<strong>$${p.amount.toFixed(2)}</strong>`;
+
+                  return `
+                    <tr>
+                      <td><code style="font-size:0.75rem;">${escapeHTML(p.transactionId)}</code></td>
+                      <td>${escapeHTML(p.planName)}</td>
+                      <td>${amountDisplay}</td>
+                      <td>${methodBadge}</td>
+                      <td>${getStatusBadge(p.status)}</td>
+                      <td>${formatDate(p.paidAt)}</td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
           `}
@@ -771,6 +861,26 @@ window.updateClientPlan = async function(clientId) {
   }
 };
 
+window.extendClientTrial = async function(clientId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/clients/${clientId}/extend-trial`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ days: 30 })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`✓ ${data.message}`);
+      await loadClients();
+      await openClientDossier(clientId);
+    } else {
+      alert(`Error: ${data.error || 'Failed to extend trial'}`);
+    }
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  }
+};
+
 // 4. Payments Ledger
 async function loadPayments() {
   try {
@@ -786,20 +896,32 @@ async function loadPayments() {
       return;
     }
 
-    tblPaymentsList.innerHTML = payments.map(p => `
-      <tr>
-        <td><code>${escapeHTML(p.transactionId)}</code></td>
-        <td>
-          <strong>${escapeHTML(p.user?.name || 'Client')}</strong>
-          <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHTML(p.user?.email || '—')}</div>
-        </td>
-        <td>${escapeHTML(p.planName)}</td>
-        <td><strong style="color:var(--success); font-size:0.95rem;">$${p.amount.toFixed(2)}</strong></td>
-        <td><span style="text-transform: capitalize;">${escapeHTML(p.paymentMethod)}</span></td>
-        <td>${getStatusBadge(p.status)}</td>
-        <td>${formatDate(p.paidAt)}</td>
-      </tr>
-    `).join('');
+    tblPaymentsList.innerHTML = payments.map(p => {
+      const isCreditMethod = p.paymentMethod === 'credits' || p.paymentMethod === 'free_credits' || p.currency === 'CREDITS';
+      const methodBadge = p.paymentMethod === 'credits' 
+        ? '<span class="badge" style="background:rgba(6,182,212,0.15); color:var(--accent);">🪙 Credits Balance</span>'
+        : (p.paymentMethod === 'free_credits' 
+            ? '<span class="badge" style="background:rgba(234,179,8,0.15); color:#eab308;">🎁 Free Credit Grant</span>'
+            : `<span style="text-transform: capitalize;">${escapeHTML(p.paymentMethod)}</span>`);
+      const amountDisplay = isCreditMethod 
+        ? `<strong style="color:var(--accent); font-size:0.95rem;">🪙 ${p.amount.toFixed(0)} Credits</strong>`
+        : `<strong style="color:var(--success); font-size:0.95rem;">$${p.amount.toFixed(2)}</strong>`;
+
+      return `
+        <tr>
+          <td><code>${escapeHTML(p.transactionId)}</code></td>
+          <td>
+            <strong>${escapeHTML(p.user?.name || 'Client')}</strong>
+            <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHTML(p.user?.email || '—')}</div>
+          </td>
+          <td>${escapeHTML(p.planName)}</td>
+          <td>${amountDisplay}</td>
+          <td>${methodBadge}</td>
+          <td>${getStatusBadge(p.status)}</td>
+          <td>${formatDate(p.paidAt)}</td>
+        </tr>
+      `;
+    }).join('');
   } catch (err) {
     console.error('Error loading payments:', err);
   }
@@ -846,6 +968,118 @@ formNewPayment.addEventListener('submit', async (e) => {
     }
   } catch (err) {
     alert(`Error: ${err.message}`);
+  }
+});
+
+// Notice in New Payment modal when credits method selected
+const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+const paymentCreditBalanceNotice = document.getElementById('paymentCreditBalanceNotice');
+
+function updatePaymentCreditNotice() {
+  const method = paymentMethodSelect?.value;
+  const clientOpt = paymentClientSelect?.selectedOptions[0];
+  const credits = clientOpt ? parseFloat(clientOpt.getAttribute('data-credits') || 0) : 0;
+  if (method === 'credits' || method === 'free_credits') {
+    if (paymentCreditBalanceNotice) {
+      paymentCreditBalanceNotice.style.display = 'block';
+      paymentCreditBalanceNotice.innerHTML = `Client Balance: <strong>🪙 ${credits.toFixed(1)} Credits</strong> ${method === 'credits' ? '• Transaction amount will be deducted from this balance' : '• Amount will be granted as free credits'}`;
+    }
+  } else {
+    if (paymentCreditBalanceNotice) paymentCreditBalanceNotice.style.display = 'none';
+  }
+}
+
+paymentMethodSelect?.addEventListener('change', updatePaymentCreditNotice);
+paymentClientSelect?.addEventListener('change', updatePaymentCreditNotice);
+
+// 6. Free Credit Allocation Logic
+btnOpenAllocateCreditsModal?.addEventListener('click', async () => {
+  await loadClients();
+  openAllocateCreditsModal(currentClientsList[0]?.id || null);
+});
+
+window.openAllocateCreditsModal = async function(clientId) {
+  await loadClients();
+  if (clientId && creditClientSelect) {
+    creditClientSelect.value = clientId;
+  }
+  updateCreditBalanceNotice();
+  modalAllocateCredits.classList.add('open');
+};
+
+function updateCreditBalanceNotice() {
+  const selectedOpt = creditClientSelect?.selectedOptions[0];
+  const credits = selectedOpt ? parseFloat(selectedOpt.getAttribute('data-credits') || 0) : 0;
+  if (creditCurrentBalanceNotice) {
+    creditCurrentBalanceNotice.innerHTML = `Current Available Balance: <strong>🪙 ${credits.toFixed(1)} Credits</strong>`;
+  }
+}
+
+creditClientSelect?.addEventListener('change', updateCreditBalanceNotice);
+
+// Quick Preset Buttons (+50, +100, +250, +500, +1000)
+document.querySelectorAll('.credit-preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const amt = btn.getAttribute('data-amt');
+    if (amt && creditAmountInput) {
+      creditAmountInput.value = amt;
+    }
+  });
+});
+
+creditReasonSelect?.addEventListener('change', () => {
+  if (creditCustomReasonGroup) {
+    creditCustomReasonGroup.style.display = creditReasonSelect.value === 'Custom' ? 'block' : 'none';
+  }
+});
+
+formAllocateCredits?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const clientId = creditClientSelect.value;
+  const amount = parseFloat(creditAmountInput.value);
+  const type = creditTypeSelect.value;
+  let reason = creditReasonSelect.value;
+  if (reason === 'Custom') {
+    reason = creditCustomReasonInput.value.trim() || 'Custom Allocation';
+  }
+  const note = creditNoteInput.value.trim();
+
+  if (!clientId || isNaN(amount) || amount <= 0) {
+    alert('Please select a client and enter a valid positive credit amount.');
+    return;
+  }
+
+  try {
+    if (btnSubmitAllocateCredits) {
+      btnSubmitAllocateCredits.disabled = true;
+      btnSubmitAllocateCredits.textContent = 'Allocating Credits...';
+    }
+
+    const res = await fetch(`${API_BASE}/api/admin/clients/${clientId}/credits`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ amount, type, reason, note })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert(`✓ ${data.message || 'Credits allocated successfully!'}`);
+      modalAllocateCredits.classList.remove('open');
+      formAllocateCredits.reset();
+      await loadOverview();
+      await loadClients();
+      await loadPayments();
+      await loadLogs();
+    } else {
+      alert(`Error: ${data.error || 'Failed to allocate credits'}`);
+    }
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  } finally {
+    if (btnSubmitAllocateCredits) {
+      btnSubmitAllocateCredits.disabled = false;
+      btnSubmitAllocateCredits.textContent = '🎁 Allocate Credits Now';
+    }
   }
 });
 

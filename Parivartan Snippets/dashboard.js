@@ -5698,6 +5698,11 @@ ${combinedContext}`;
 
   // --- Dashboard Authentication Gate ---
   const dashboardAuthGateOverlay = document.getElementById('dashboardAuthGateOverlay');
+  const dashboardTrialExpiredOverlay = document.getElementById('dashboardTrialExpiredOverlay');
+  const btnGateBuyCredits = document.getElementById('btnGateBuyCredits');
+  const btnGateSubscribeMonthly = document.getElementById('btnGateSubscribeMonthly');
+  const dashTrialBadge = document.getElementById('dashTrialBadge');
+  const dashTrialBadgeText = document.getElementById('dashTrialBadgeText');
   const btnGateGoogleLogin = document.getElementById('btnGateGoogleLogin');
   const btnGatePresetMaster = document.getElementById('btnGatePresetMaster');
   const formGateLogin = document.getElementById('formGateLogin');
@@ -5714,12 +5719,108 @@ ${combinedContext}`;
     }
     if (!user) {
       if (dashboardAuthGateOverlay) dashboardAuthGateOverlay.style.display = 'flex';
+      if (dashboardTrialExpiredOverlay) dashboardTrialExpiredOverlay.style.display = 'none';
+      if (dashTrialBadge) dashTrialBadge.style.display = 'none';
+      return false;
+    }
+
+    if (dashboardAuthGateOverlay) dashboardAuthGateOverlay.style.display = 'none';
+
+    // Check 1-Month Free Trial / Credit Status
+    let trial = null;
+    if (window.SyncService) {
+      const billing = await window.SyncService.fetchLiveBillingStatus();
+      trial = billing?.trial || (await window.SyncService.getTrialStatus());
+    }
+
+    const isMaster = (user.email || '').toLowerCase().includes('parivartan') || user.role === 'admin';
+    const canAccess = isMaster || (trial ? trial.canAccess : true);
+
+    if (dashTrialBadge && dashTrialBadgeText) {
+      dashTrialBadge.style.display = 'inline-flex';
+      if (isMaster) {
+        dashTrialBadgeText.textContent = '👑 Master Admin (Enterprise)';
+        dashTrialBadge.style.color = '#eab308';
+        dashTrialBadge.style.background = 'rgba(234, 179, 8, 0.12)';
+        dashTrialBadge.style.borderColor = 'rgba(234, 179, 8, 0.3)';
+      } else if (trial?.isPaidPlan) {
+        dashTrialBadgeText.textContent = `⭐ Pro Monthly (${(trial.creditBalance || 0).toFixed(0)} Credits)`;
+        dashTrialBadge.style.color = '#4f46e5';
+        dashTrialBadge.style.background = 'rgba(79, 70, 229, 0.12)';
+        dashTrialBadge.style.borderColor = 'rgba(79, 70, 229, 0.3)';
+      } else if (trial?.isTrialActive) {
+        dashTrialBadgeText.textContent = `🟢 1-Month Free Trial (${trial.trialDaysLeft}d left • ${(trial.creditBalance || 0).toFixed(0)}c)`;
+        dashTrialBadge.style.color = '#10b981';
+        dashTrialBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+        dashTrialBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      } else if (trial?.hasCredits) {
+        dashTrialBadgeText.textContent = `🪙 Pay-As-You-Go (${(trial.creditBalance || 0).toFixed(0)} Credits)`;
+        dashTrialBadge.style.color = '#06b6d4';
+        dashTrialBadge.style.background = 'rgba(6, 182, 212, 0.12)';
+        dashTrialBadge.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+      } else {
+        dashTrialBadgeText.textContent = `🔴 Trial Expired (0 Credits)`;
+        dashTrialBadge.style.color = '#ef4444';
+        dashTrialBadge.style.background = 'rgba(239, 68, 68, 0.12)';
+        dashTrialBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      }
+    }
+
+    if (!canAccess) {
+      if (dashboardTrialExpiredOverlay) dashboardTrialExpiredOverlay.style.display = 'flex';
       return false;
     } else {
-      if (dashboardAuthGateOverlay) dashboardAuthGateOverlay.style.display = 'none';
+      if (dashboardTrialExpiredOverlay) dashboardTrialExpiredOverlay.style.display = 'none';
       return true;
     }
   }
+
+  btnGateBuyCredits?.addEventListener('click', async () => {
+    try {
+      btnGateBuyCredits.disabled = true;
+      btnGateBuyCredits.textContent = 'Processing...';
+      if (window.SyncService) {
+        await window.SyncService.buyCredits('small');
+      }
+      showToast('✓ 100 Credits purchased! Workspace unlocked.', 'success');
+      await checkDashboardAuthGate();
+      await updateCloudUserCardUI();
+      await loadData();
+    } catch (e) {
+      alert(`Error: ${e.message}`);
+    } finally {
+      btnGateBuyCredits.disabled = false;
+      btnGateBuyCredits.textContent = 'Buy 100c ($10.00)';
+    }
+  });
+
+  btnGateSubscribeMonthly?.addEventListener('click', async () => {
+    try {
+      btnGateSubscribeMonthly.disabled = true;
+      btnGateSubscribeMonthly.textContent = 'Activating...';
+      if (window.SyncService) {
+        await window.SyncService.subscribeMonthly('pro');
+      }
+      showToast('✓ Pro Monthly Subscription activated! Workspace unlocked.', 'success');
+      await checkDashboardAuthGate();
+      await updateCloudUserCardUI();
+      await loadData();
+    } catch (e) {
+      alert(`Error: ${e.message}`);
+    } finally {
+      btnGateSubscribeMonthly.disabled = false;
+      btnGateSubscribeMonthly.textContent = 'Subscribe ($9.99/mo)';
+    }
+  });
+
+  dashTrialBadge?.addEventListener('click', () => {
+    const buy = confirm('Manage Subscription & Credits:\n\nClick OK to purchase 100 Credits ($10.00)\nClick CANCEL to activate Pro Monthly ($9.99/mo)');
+    if (buy) {
+      btnGateBuyCredits?.click();
+    } else {
+      btnGateSubscribeMonthly?.click();
+    }
+  });
 
   btnGatePresetMaster?.addEventListener('click', () => {
     if (inputGateEmail) inputGateEmail.value = 'parivartanvishalsingh@gmail.com';
@@ -5731,42 +5832,15 @@ ${combinedContext}`;
     if (gateAuthError) gateAuthError.style.display = 'none';
     try {
       btnGateGoogleLogin.textContent = 'Authenticating with Google...';
-      if (chrome?.identity?.getAuthToken && window.SyncService) {
+      if (window.SyncService) {
         await window.SyncService.googleLogin();
-      } else {
-        const googleEmail = prompt('Sign in with Google Account:\nEnter Google Email address:', 'parivartanvishalsingh@gmail.com');
-        if (!googleEmail) return;
-        const isMaster = googleEmail.toLowerCase() === 'parivartanvishalsingh@gmail.com';
-        if (window.SyncService) {
-          await window.SyncService.devLogin(
-            googleEmail,
-            isMaster ? 'Vishal Singh' : googleEmail.split('@')[0],
-            isMaster ? 'admin' : 'user',
-            isMaster ? 'Parivartan HQ' : null,
-            isMaster ? 'kmbl1110' : null
-          );
-        }
       }
       showToast('✓ Signed in with Google successfully!', 'success');
       await checkDashboardAuthGate();
       await updateCloudUserCardUI();
       await loadData();
     } catch (e) {
-      const googleEmail = prompt('Google Sign-In fallback:\nEnter Google Email address:', 'parivartanvishalsingh@gmail.com');
-      if (googleEmail && window.SyncService) {
-        const isMaster = googleEmail.toLowerCase() === 'parivartanvishalsingh@gmail.com';
-        await window.SyncService.devLogin(
-          googleEmail,
-          isMaster ? 'Vishal Singh' : googleEmail.split('@')[0],
-          isMaster ? 'admin' : 'user',
-          isMaster ? 'Parivartan HQ' : null,
-          isMaster ? 'kmbl1110' : null
-        );
-        showToast(`✓ Signed in as ${googleEmail}!`, 'success');
-        await checkDashboardAuthGate();
-        await updateCloudUserCardUI();
-        await loadData();
-      } else if (gateAuthError) {
+      if (gateAuthError) {
         gateAuthError.textContent = `Google Sign-In: ${e.message}`;
         gateAuthError.style.display = 'block';
       }

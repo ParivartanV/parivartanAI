@@ -14,7 +14,8 @@
       <span>Parivartan Snippet</span>
     </div>
     <div class="popup-header-actions">
-      <span id="popupUserPill" style="display: none; font-size: 0.72rem; font-weight: 600; padding: 2px 6px; border-radius: 999px; background: rgba(79, 70, 229, 0.1); color: #4f46e5; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+      <span id="popupTrialPill" style="display: none; font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: rgba(16, 185, 129, 0.12); color: #10b981; white-space: nowrap;"></span>
+      <span id="popupUserPill" style="display: none; font-size: 0.72rem; font-weight: 600; padding: 2px 6px; border-radius: 999px; background: rgba(79, 70, 229, 0.1); color: #4f46e5; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
       <button id="btnPopupLogout" title="Sign Out" style="display: none; color: #ef4444;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -80,6 +81,29 @@
       </button>
       <div id="popupAuthError" style="display: none; color: #ef4444; font-size: 0.72rem; margin-top: 4px;"></div>
     </form>
+  </div>
+
+  <!-- TRIAL EXPIRED SCREEN (Shown when 1-month trial expired and 0 credits) -->
+  <div id="popupTrialExpiredScreen" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 22px 18px; text-align: center; background: #ffffff;">
+    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: #ef4444;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">1-Month Free Trial Expired</h3>
+    <p style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin: 0 0 16px 0;">
+      Your 30-day free trial has concluded. Buy credits (pay-as-you-go) or subscribe to a monthly plan to unlock your workspace.
+    </p>
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+      <button type="button" id="btnPopupBuyCredits" style="width: 100%; box-sizing: border-box; background: #06b6d4; color: #ffffff; border: none; border-radius: 6px; font-weight: 700; padding: 9px 12px; font-size: 0.8rem; cursor: pointer;">
+        🪙 Buy 100 Credits ($10.00)
+      </button>
+      <button type="button" id="btnPopupSubscribeMonthly" style="width: 100%; box-sizing: border-box; background: #4f46e5; color: #ffffff; border: none; border-radius: 6px; font-weight: 700; padding: 9px 12px; font-size: 0.8rem; cursor: pointer;">
+        ⭐ Subscribe Pro ($9.99/mo)
+      </button>
+    </div>
   </div>
 
   <!-- MAIN POPUP CONTENT (Only shown when client IS logged in) -->

@@ -65,6 +65,46 @@
     </div>
   </div>
 
+  <!-- DASHBOARD TRIAL EXPIRED OVERLAY -->
+  <div id="dashboardTrialExpiredOverlay" style="position: fixed; inset: 0; z-index: 999998; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; max-width: 500px; width: 100%; padding: 32px 28px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); text-align: center;">
+      <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0 0 8px 0;">1-Month Free Trial Concluded</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 20px 0;">
+        Your 30-day free trial has expired. To continue expanding shortcuts and running AI templates, please choose pay-as-you-go credits or subscribe to an active monthly tier.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; background: var(--bg-hover); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">🪙 Pay-As-You-Go Credits</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">100 Credits • No recurring commitment</div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btnGateBuyCredits">
+            Buy 100c ($10.00)
+          </button>
+        </div>
+
+        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; background: var(--bg-hover); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">⭐ Pro Monthly Subscription</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Unlimited snippets + 250 monthly AI credits</div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btnGateSubscribeMonthly" style="background: #4f46e5; border-color: #4f46e5;">
+            Subscribe ($9.99/mo)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Top App Header -->
   <header class="top-header">
     <div class="brand-wrapper">
@@ -103,6 +143,11 @@
       <div style="display: inline-flex; align-items: center; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; margin-right: 2px;">
         <button class="btn-icon-nav" id="btnDashFontDec" title="Decrease Text Size (A-)" style="border: none; border-radius: 0; width: 28px; height: 32px; font-weight: 700; font-size: 0.72rem; color: var(--text-muted); padding: 0; cursor: pointer;">A-</button>
         <button class="btn-icon-nav" id="btnDashFontInc" title="Increase Text Size (A+)" style="border: none; border-radius: 0; width: 28px; height: 32px; font-weight: 700; font-size: 0.85rem; color: var(--text-muted); padding: 0; border-left: 1px solid var(--border-color); cursor: pointer;">A+</button>
+      </div>
+
+      <!-- Trial / Credit Badge -->
+      <div id="dashTrialBadge" style="display: none; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; cursor: pointer; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); margin-right: 4px;" title="Your Trial & Credit Status - Click to Buy Credits or Upgrade">
+        <span id="dashTrialBadgeText">🟢 1-Month Free Trial (30d)</span>
       </div>
 
       <!-- Quick Theme Toggle (Light / Dark) -->

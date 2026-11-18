@@ -127,6 +127,11 @@
             <div class="kpi-sub" id="kpiPaidTxnCount">0 completed transactions</div>
           </div>
           <div class="kpi-card">
+            <div class="kpi-label">Total Client Credits</div>
+            <div class="kpi-value" id="kpiCredits">0.00</div>
+            <div class="kpi-sub">Available for AI & templates</div>
+          </div>
+          <div class="kpi-card">
             <div class="kpi-label">Stored Snippets in DB</div>
             <div class="kpi-value" id="kpiSnippets">0</div>
             <div class="kpi-sub">Syncing to Chrome extensions</div>
@@ -184,6 +189,7 @@
               <input type="text" class="search-input" id="clientSearchInput" placeholder="Search by name, email, or company...">
             </div>
             <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary btn-sm" id="btnOpenAllocateCreditsModal">🎁 Allocate Free Credits</button>
               <button class="btn btn-secondary btn-sm" id="btnRefreshClients">↻ Refresh</button>
             </div>
           </div>
@@ -195,6 +201,7 @@
                   <th>Client Profile</th>
                   <th>Company</th>
                   <th>Subscription</th>
+                  <th>Credits Balance</th>
                   <th>Payments Made</th>
                   <th>Cloud Assets</th>
                   <th>Last Active</th>
@@ -202,7 +209,7 @@
                 </tr>
               </thead>
               <tbody id="tblClientsList">
-                <tr><td colspan="7" class="text-center text-muted">Loading clients...</td></tr>
+                <tr><td colspan="8" class="text-center text-muted">Loading clients...</td></tr>
               </tbody>
             </table>
           </div>
@@ -328,6 +335,8 @@
               <label>Payment Method</label>
               <select id="paymentMethodSelect" class="form-input">
                 <option value="credit_card">Credit Card (Stripe)</option>
+                <option value="credits">🪙 Credits Balance (Use Credits)</option>
+                <option value="free_credits">🎁 Free Credit Allocation (Grant Credits)</option>
                 <option value="paypal">PayPal</option>
                 <option value="wire">Bank Wire / ACH</option>
                 <option value="crypto">Cryptocurrency</option>
@@ -342,6 +351,7 @@
               </select>
             </div>
           </div>
+          <div class="form-group" id="paymentCreditBalanceNotice" style="display: none; font-size: 0.8rem; color: var(--accent); font-weight: 600; padding: 6px 10px; background: rgba(6, 182, 212, 0.1); border-radius: 6px;"></div>
           <div class="form-group">
             <label>Upgrade Client Plan Automatically</label>
             <select id="paymentUpgradePlanSelect" class="form-input">
@@ -354,6 +364,77 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modalNewPayment">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btnSubmitPayment">Record Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Allocate Free Credits -->
+  <div class="modal-overlay" id="modalAllocateCredits">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.3rem;">🎁</span>
+          <h3 style="margin: 0;">Allocate Free Credits to Client</h3>
+        </div>
+        <button class="modal-close-btn" data-close="modalAllocateCredits">&times;</button>
+      </div>
+      <form id="formAllocateCredits">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Target Client Profile *</label>
+            <select id="creditClientSelect" class="form-input" required></select>
+            <div id="creditCurrentBalanceNotice" style="font-size: 0.82rem; color: var(--accent); margin-top: 6px; font-weight: 600;"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Credit Amount *</label>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+              <button type="button" class="btn btn-secondary btn-sm credit-preset-btn" data-amt="50">+50</button>
+              <button type="button" class="btn btn-secondary btn-sm credit-preset-btn" data-amt="100">+100</button>
+              <button type="button" class="btn btn-secondary btn-sm credit-preset-btn" data-amt="250">+250</button>
+              <button type="button" class="btn btn-secondary btn-sm credit-preset-btn" data-amt="500">+500</button>
+              <button type="button" class="btn btn-secondary btn-sm credit-preset-btn" data-amt="1000">+1,000</button>
+            </div>
+            <input type="number" step="1" min="1" id="creditAmountInput" class="form-input" placeholder="100" value="100" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Allocation Action</label>
+              <select id="creditTypeSelect" class="form-input">
+                <option value="add">➕ Grant / Add to Balance</option>
+                <option value="set">⚡ Set Exact Balance</option>
+                <option value="deduct">➖ Deduct from Balance</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reason / Category</label>
+              <select id="creditReasonSelect" class="form-input">
+                <option value="Free Trial Welcome Bonus">Free Trial Welcome Bonus</option>
+                <option value="Promotional Gift">Promotional Gift</option>
+                <option value="Support Compensation">Customer Support Compensation</option>
+                <option value="Enterprise Monthly Grant">Enterprise Monthly Grant</option>
+                <option value="Custom">Custom Reason...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="creditCustomReasonGroup" style="display: none;">
+            <label>Specify Custom Reason</label>
+            <input type="text" id="creditCustomReasonInput" class="form-input" placeholder="e.g. Beta tester appreciation reward">
+          </div>
+
+          <div class="form-group">
+            <label>Internal Audit Note (Optional)</label>
+            <input type="text" id="creditNoteInput" class="form-input" placeholder="e.g. Authorized by Master Admin for loyalty campaign">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modalAllocateCredits">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitAllocateCredits">
+            🎁 Allocate Credits Now
+          </button>
         </div>
       </form>
     </div>
